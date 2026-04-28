@@ -1,0 +1,137 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+@theme {
+  /* ── Core Brand Identity ── */
+  --color-plum-heavy:       #2D1520;   /* deep background/text */
+  --color-plum-brand:       #ff69b4;   /* primary brand color */
+  --color-plum-muted:       #C4A0AC;   /* secondary muted text */
+  --color-plum-soft:        #FDEEF1;   /* very light bg blush */
+  --color-plum-border:      #F5E6EA;   /* dedicated border color */
+  --color-plum-rose:        #F5B4BC;   /* accent rose */
+
+  /* ── Legacy tokens for health-* compatibility ── */
+  --color-health-green:     #ff69b4;
+  --color-health-pink:      #F5B4BC;
+  --color-health-white:     #FFFFFF;
+  --color-health-dark:      #2D1520;
+  --color-health-gray:      #9A8A8E;
+  --color-health-soft:      #FFF7F8;
+
+  --radius-xl: 20px;
+  --radius-2xl: 32px;
+  --radius-3xl: 48px;
+}
+
+:root {
+  font-family: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif;
+  background-color: #FFF7F8;
+  color: #2D1520;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  margin: 0;
+  overflow-x: hidden;
+  background: #FFF7F8;
+}
+
+@layer base {
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-black tracking-tight;
+  }
+}
+
+@layer components {
+  /* ── Premium Buttons ── */
+  .btn-plum {
+    @apply px-8 py-4 bg-plum-heavy text-white rounded-[2rem] font-black text-[12px] 
+           uppercase tracking-[0.2em] transition-all duration-300
+           hover:scale-105 hover:shadow-2xl hover:shadow-plum-heavy/20
+           active:scale-95 flex items-center justify-center gap-3 cursor-pointer;
+  }
+
+  .btn-plum-outline {
+    @apply px-8 py-4 bg-white border-2 border-plum-border text-plum-heavy rounded-[2rem] 
+           font-black text-[12px] uppercase tracking-[0.2em] transition-all duration-300
+           hover:bg-plum-soft hover:border-plum-brand active:scale-95 
+           flex items-center justify-center gap-3 cursor-pointer;
+  }
+
+  /* ── Glassmorphic Cards ── */
+  .plum-card {
+    @apply bg-white rounded-[3rem] border border-plum-border shadow-sm 
+           transition-all duration-500 hover:shadow-2xl hover:shadow-plum-brand/5;
+  }
+
+  /* ── Custom Scrollbar ── */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #C4A0AC transparent;
+  }
+}
+
+/* ── Custom Webkit Scrollbars ── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #C4A0AC;
+  border-radius: 20px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9A8A8E;
+}
+
+/* ── Selection ── */
+::selection {
+  background: #ff69b4;
+  color: white;
+}
+
+/* ── Smooth Scrolling ── */
+html {
+  scroll-behavior: smooth;
+}
+
+/* ── Utility Animations ── */
+@keyframes gradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-gradient-flow {
+  background-size: 200% 200%;
+  animation: gradient 15s ease infinite;
+}
+
+.thin-scrollbar::-webkit-scrollbar {
+  height: 3px;
+}
+.thin-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.thin-scrollbar::-webkit-scrollbar-thumb {
+  background: #ff69b4;
+  border-radius: 10px;
+}
+.thin-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #ff69b4 transparent;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
