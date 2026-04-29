@@ -264,7 +264,7 @@ const ContentCMS = () => {
                      </span>
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                    <div className="flex items-center justify-end gap-2 transition-all duration-300">
                        <button onClick={() => setViewItem(item)} className="w-8 h-8 flex items-center justify-center bg-white text-slate-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-all shadow-sm border border-black/5"><Eye size={14} /></button>
                        <button onClick={() => { setEditItem(item); setFormData(item); setSelectedFile(null); }} className="w-8 h-8 flex items-center justify-center bg-white text-slate-400 hover:text-health-green hover:bg-health-green/10 rounded-lg transition-all shadow-sm border border-black/5"><Edit3 size={14} /></button>
                        <button onClick={() => setDeleteId(item.id)} className="w-8 h-8 flex items-center justify-center bg-white text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all shadow-sm border border-black/5"><Trash2 size={14} /></button>

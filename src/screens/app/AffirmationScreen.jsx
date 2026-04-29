@@ -5,7 +5,7 @@ import {
   BookOpen, Volume2, Bookmark,
   Users, User, ChevronLeft,
   ChevronRight, X, Maximize2, Wand2,
-  PenLine, PlusCircle, CheckCircle2, Music, Pause, Play,
+  PenLine, PlusCircle, CheckCircle2,
   Wind, Shield
 } from 'lucide-react';
 
@@ -19,8 +19,7 @@ const AffirmationScreen = () => {
   const [showManualWrite, setShowManualWrite] = useState(false);
   const [customAffirmations, setCustomAffirmations] = useState([]);
   const [newAffirmation, setNewAffirmation] = useState('');
-  const [isPlayingMusic, setIsPlayingMusic] = useState(false);
-  const [isAutoPlaying, setIsAutoPlaying] = useState(false);
+  const [attendedCount, setAttendedCount] = useState(0);
 
   const tabs = [
     { id: 'Self Love', icon: Heart, color: '#FDEEF1', text: '#D17B88' },
@@ -99,14 +98,24 @@ const AffirmationScreen = () => {
   }, []);
 
   useEffect(() => {
-    let interval;
-    if (isAutoPlaying && isMeditationMode) {
-      interval = setInterval(() => {
-        nextAffirmation();
-      }, 5000);
+    if (!isMeditationMode) {
+      setAttendedCount(0);
     }
-    return () => clearInterval(interval);
-  }, [isAutoPlaying, isMeditationMode, currentIndex]);
+  }, [isMeditationMode]);
+
+  useEffect(() => {
+    if (!isFullScreen) return undefined;
+    const onEsc = (event) => {
+      if (event.key === 'Escape') setIsFullScreen(false);
+    };
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', onEsc);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', onEsc);
+    };
+  }, [isFullScreen]);
 
   const nextAffirmation = () => {
     if (isFlipping) return;
@@ -367,16 +376,22 @@ const AffirmationScreen = () => {
 
                  <div className="space-y-4 relative z-10">
                     <h3 className="text-2xl font-black text-rose-100">Synchronized Healing</h3>
-                    <p className="text-rose-100/50 text-sm italic">Affirmations will play automatically every 5 seconds.</p>
+                    <p className="text-rose-100/50 text-sm italic">Auto-play removed. Tap attend when you complete one mindful breath cycle.</p>
                     
                     <div className="pt-6 flex justify-center gap-6">
                        <button 
-                         onClick={() => setIsPlayingMusic(!isPlayingMusic)}
+                        onClick={() => {
+                          setAttendedCount((prev) => prev + 1);
+                          nextAffirmation();
+                        }}
                          className="flex items-center gap-3 px-8 py-3 rounded-2xl bg-white/10 hover:bg-white/20 transition-all text-white border border-white/10"
                        >
-                          {isPlayingMusic ? <Pause size={18} /> : <Play size={18} />}
-                          <span className="text-[10px] font-black uppercase tracking-widest">Ambient Music</span>
+                          <CheckCircle2 size={18} />
+                          <span className="text-[10px] font-black uppercase tracking-widest">Mark as Attended</span>
                        </button>
+                       <div className="flex items-center px-5 py-3 rounded-2xl bg-white/5 text-rose-100/90 border border-white/10 text-[10px] font-black uppercase tracking-widest">
+                          Cycles Attended: {attendedCount}
+                       </div>
                     </div>
                  </div>
               </div>
@@ -457,7 +472,7 @@ const AffirmationScreen = () => {
                                       setCustomAffirmations(updated);
                                       localStorage.setItem('sakhi_custom_affirmations', JSON.stringify(updated));
                                    }}
-                                   className="opacity-0 group-hover:opacity-100 p-2 text-rose-300/50 hover:text-rose-300 transition-all"
+                                  className="p-2 text-rose-300/70 hover:text-rose-300 transition-all"
                                  >
                                     <X size={18} />
                                  </button>
@@ -479,44 +494,53 @@ const AffirmationScreen = () => {
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }} 
             exit={{ opacity: 0 }} 
-            className="fixed inset-0 z-[100] bg-[#12080D] flex flex-col items-center justify-center px-8"
+            className="fixed inset-0 z-[10050] bg-[#12080D] flex items-center justify-center p-4 md:p-8"
           >
-            <div className="absolute inset-0 opacity-40">
-               <img src={categoryImages[activeTab] || '/assets/affirmation_bg.png'} alt="Focus" className="w-full h-full object-cover blur-sm scale-110" />
+            <div className="absolute inset-0">
+               <img src={categoryImages[activeTab] || '/assets/affirmation_bg.png'} alt="Focus" className="w-full h-full object-cover blur-[3px] scale-110 opacity-65" />
             </div>
-            <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_50%_50%,#D17B88_0%,transparent_100%)] pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-b from-[#12080D]/70 via-[#12080D]/80 to-[#12080D]/85 pointer-events-none" />
+            <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_50%_20%,#D17B88_0%,transparent_55%)] pointer-events-none" />
             
-            <button onClick={() => setIsFullScreen(false)} className="absolute top-10 right-10 w-16 h-16 rounded-full bg-white/5 border border-white/10 text-white flex items-center justify-center backdrop-blur-xl hover:bg-white/10 transition-all">
-              <X size={32} />
+            <button
+              onClick={() => setIsFullScreen(false)}
+              className="absolute top-5 right-5 md:top-8 md:right-8 h-12 md:h-14 px-4 md:px-5 rounded-2xl bg-white/10 border border-white/25 text-white flex items-center justify-center gap-2 backdrop-blur-xl hover:bg-white/20 transition-all shadow-lg"
+              aria-label="Close full screen"
+            >
+              <X size={20} />
+              <span className="text-[10px] md:text-xs font-black uppercase tracking-[0.2em]">Close</span>
             </button>
 
-            <div className="max-w-5xl w-full text-center relative z-10">
+            <div className="w-full max-w-6xl text-center relative z-10">
                <motion.div
                   initial={{ scale: 0.9, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ duration: 1 }}
-                  className="space-y-16"
+                  className="space-y-8 md:space-y-10 rounded-[2.2rem] md:rounded-[2.8rem] border border-white/20 bg-black/20 backdrop-blur-md p-6 md:p-10 lg:p-14 shadow-[0_24px_80px_rgba(0,0,0,0.4)]"
                >
-                  <Quote size={80} className="text-[#D17B88] mx-auto opacity-30" />
+                  <Quote size={52} className="text-[#F5C7D0] mx-auto opacity-60" />
+                  <span className="inline-flex px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-[10px] font-black uppercase tracking-[0.25em] text-rose-100/90">
+                    Section: {activeTab}
+                  </span>
                   
-                  <h2 className="text-4xl md:text-6xl lg:text-8xl font-black text-rose-50 leading-tight italic tracking-tighter font-serif drop-shadow-2xl">
+                  <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-rose-50 leading-[1.15] italic tracking-tight font-serif drop-shadow-2xl max-w-5xl mx-auto">
                     "{isCoupleMode ? getCurrentAffirmation().left : getCurrentAffirmation()}"
                   </h2>
 
                   {isCoupleMode && (
-                    <div className="pt-10">
-                       <p className="text-2xl md:text-4xl font-black text-rose-100/50 leading-tight italic tracking-tighter font-serif">
+                    <div className="pt-3">
+                       <p className="text-2xl md:text-3xl lg:text-4xl font-black text-rose-100/85 leading-tight italic tracking-tight font-serif max-w-4xl mx-auto">
                           "{getCurrentAffirmation().right}"
                        </p>
                     </div>
                   )}
 
-                  <div className="pt-20 flex flex-col items-center gap-6">
-                     <span className="text-[12px] font-black uppercase tracking-[0.6em] text-rose-200/40">Section: {activeTab}</span>
-                     <div className="flex gap-4">
-                        <button onClick={prevAffirmation} className="p-4 rounded-full border border-white/10 text-white/50 hover:text-white transition-all"><ChevronLeft size={24} /></button>
-                        <button onClick={nextAffirmation} className="p-4 rounded-full border border-white/10 text-white/50 hover:text-white transition-all"><ChevronRight size={24} /></button>
+                  <div className="pt-6 flex flex-col items-center gap-4">
+                     <div className="flex gap-3">
+                        <button onClick={prevAffirmation} className="w-12 h-12 rounded-full border border-white/25 text-white/80 hover:text-white hover:bg-white/10 transition-all flex items-center justify-center"><ChevronLeft size={22} /></button>
+                        <button onClick={nextAffirmation} className="w-12 h-12 rounded-full border border-white/25 text-white/80 hover:text-white hover:bg-white/10 transition-all flex items-center justify-center"><ChevronRight size={22} /></button>
                      </div>
+                     <p className="text-[10px] uppercase tracking-[0.25em] text-rose-100/60">Press ESC to close</p>
                   </div>
                </motion.div>
             </div>

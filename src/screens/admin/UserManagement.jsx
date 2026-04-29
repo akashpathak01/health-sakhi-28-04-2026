@@ -1,22 +1,24 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, Filter, UserMinus, Mail, Edit2, X, Plus, Trash2, Send, CheckCircle, ChevronDown, DownloadCloud, Clock, Tag, UserPlus } from 'lucide-react';
+import { Search, Filter, UserMinus, Mail, Edit2, X, Plus, Trash2, Send, CheckCircle, ChevronDown, DownloadCloud, Clock, Tag, UserPlus, Eye, EyeOff } from 'lucide-react';
+import { APPROVED_MEMBERS_KEY, readJsonArray, writeJsonArray } from '../../data/memberOnboarding';
 
 // ── Sample Users Data ──────────────────────────────────────────────────────────
 const INITIAL_USERS = [
-  { id: 1, name: 'Priya Sharma', phone: '+91 98XXX XXX29', email: 'priya@example.com', plan: 'Gold', status: 'Active', progress: 65, active: '2h ago', role: 'Member' },
-  { id: 2, name: 'Ananya Iyer', phone: '+91 87XXX XXX12', email: 'ananya@example.com', plan: 'Free', status: 'Inactive', progress: 12, active: '3d ago', role: 'Member' },
-  { id: 3, name: 'Megha Singh', phone: '+91 76XXX XXX45', email: 'megha@example.com', plan: 'Silver', status: 'Active', progress: 88, active: 'Online', role: 'Member' },
-  { id: 4, name: 'Sonal Verma', phone: '+91 91XXX XXX33', email: 'sonal@example.com', plan: 'Gold', status: 'Active', progress: 42, active: '1h ago', role: 'Member' },
-  { id: 5, name: 'Divya Nair', phone: '+91 93XXX XXX77', email: 'divya@example.com', plan: 'Silver', status: 'Active', progress: 55, active: '30m ago', role: 'Member' },
+  { id: 1, name: 'Priya Sharma', phone: '+91 98XXX XXX29', email: 'priya@example.com', password: 'demo123', plan: 'Premium Pro', status: 'Active', progress: 65, active: '2h ago', role: 'Member' },
+  { id: 2, name: 'Ananya Iyer', phone: '+91 87XXX XXX12', email: 'ananya@example.com', password: 'demo123', plan: 'Free Sakhi', status: 'Inactive', progress: 12, active: '3d ago', role: 'Member' },
+  { id: 3, name: 'Megha Singh', phone: '+91 76XXX XXX45', email: 'megha@example.com', password: 'demo123', plan: 'Premium Pro', status: 'Active', progress: 88, active: 'Online', role: 'Member' },
+  { id: 4, name: 'Sonal Verma', phone: '+91 91XXX XXX33', email: 'sonal@example.com', password: 'demo123', plan: 'Advisor Connect+', status: 'Active', progress: 42, active: '1h ago', role: 'Member' },
+  { id: 5, name: 'Divya Nair', phone: '+91 93XXX XXX77', email: 'divya@example.com', password: 'demo123', plan: 'Premium Pro', status: 'Active', progress: 55, active: '30m ago', role: 'Member' },
 ];
 
-const planStyle = (plan) =>
-  plan === 'Gold' ? 'bg-amber-100 text-amber-600 border-amber-200' :
-    plan === 'Silver' ? 'bg-slate-200 text-slate-600 border-slate-300' :
-      'bg-gray-100 text-gray-400 border-gray-200';
+const planStyle = (plan) => {
+  const lower = (plan || '').toLowerCase();
+  if (lower.includes('premium') || lower.includes('gold') || lower.includes('elite')) return 'bg-amber-100 text-amber-600 border-amber-200';
+  if (lower.includes('free')) return 'bg-gray-100 text-gray-500 border-gray-200';
+  return 'bg-slate-200 text-slate-600 border-slate-300';
+};
 
-const planLabel = (plan) =>
-  plan === 'Gold' ? '⭐ Gold' : plan === 'Silver' ? '🥈 Silver' : '🆓 Free';
+const planLabel = (plan) => plan || 'Free';
 
 // ── Premium Form Dropdown ─────────────────────────────────────────────────────
 const FormDropdown = ({ label, value, options, onChange }) => {
@@ -80,13 +82,30 @@ const Modal = ({ open, onClose, title, subtitle, icon: Icon, iconBg, children })
 
 // ── EDIT MODAL ─────────────────────────────────────────────────────────────────
 const EditModal = ({ user, onClose, onSave }) => {
-  const [form, setForm] = useState({ name: '', email: '', phone: '', plan: 'Free', status: 'Active', role: 'Member' });
-  useEffect(() => { if (user) setForm({ name: user.name, email: user.email, phone: user.phone, plan: user.plan, status: user.status, role: user.role }); }, [user]);
+  const [form, setForm] = useState({ name: '', email: '', phone: '', password: '', plan: 'Free Sakhi', status: 'Active', role: 'Member' });
+  const [showPassword, setShowPassword] = useState(false);
+  useEffect(() => { if (user) setForm({ name: user.name, email: user.email, phone: user.phone, password: user.password || '', plan: user.plan, status: user.status, role: 'Member' }); }, [user]);
 
   const field = (label, key, type = 'text', placeholder = '') => (
     <div className="space-y-1.5">
       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{label}</label>
-      <input type={type} value={form[key]} onChange={e => setForm({ ...form, [key]: e.target.value })} placeholder={placeholder} className="w-full h-12 px-4 bg-rose-50/20 border rounded-xl outline-none focus:border-[#ff69b4] focus:bg-white transition-all text-sm font-bold shadow-inner" style={{ borderColor: '#F5E6EA' }} />
+      {key === 'password' ? (
+        <div className="relative">
+          <input
+            type={showPassword ? 'text' : 'password'}
+            value={form[key]}
+            onChange={e => setForm({ ...form, [key]: e.target.value })}
+            placeholder={placeholder}
+            className="w-full h-12 px-4 pr-11 bg-rose-50/20 border rounded-xl outline-none focus:border-[#ff69b4] focus:bg-white transition-all text-sm font-bold shadow-inner"
+            style={{ borderColor: '#F5E6EA' }}
+          />
+          <button type="button" onClick={() => setShowPassword((prev) => !prev)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#ff69b4] transition-colors">
+            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+          </button>
+        </div>
+      ) : (
+        <input type={type} value={form[key]} onChange={e => setForm({ ...form, [key]: e.target.value })} placeholder={placeholder} className="w-full h-12 px-4 bg-rose-50/20 border rounded-xl outline-none focus:border-[#ff69b4] focus:bg-white transition-all text-sm font-bold shadow-inner" style={{ borderColor: '#F5E6EA' }} />
+      )}
     </div>
   );
   return (
@@ -94,10 +113,10 @@ const EditModal = ({ user, onClose, onSave }) => {
       <div className="space-y-6">
         <div className="grid grid-cols-2 gap-4">{field('Full Name', 'name', 'text', 'Priya Sharma')}{field('Phone Number', 'phone', 'text', '+91 98XXX XXXXX')}</div>
         {field('Email Address', 'email', 'email', 'priya@example.com')}
-        <div className="grid grid-cols-3 gap-3">
-          <FormDropdown label="Plan" value={form.plan} options={['Free', 'Silver', 'Gold']} onChange={val => setForm({ ...form, plan: val })} />
+        {field('Password', 'password', 'password', '********')}
+        <div className="grid grid-cols-2 gap-3">
+          <FormDropdown label="Plan" value={form.plan} options={['Free Sakhi', 'Premium Pro', 'Advisor Connect+']} onChange={val => setForm({ ...form, plan: val })} />
           <FormDropdown label="Status" value={form.status} options={['Active', 'Inactive']} onChange={val => setForm({ ...form, status: val })} />
-          <FormDropdown label="Role" value={form.role} options={['Member', 'Advisor', 'Partner', 'Admin']} onChange={val => setForm({ ...form, role: val })} />
         </div>
         <div className="flex justify-end gap-3 pt-6 border-t" style={{ borderColor: '#F5E6EA' }}>
           <button onClick={onClose} className="px-5 py-2.5 text-slate-500 font-bold text-xs uppercase tracking-widest hover:bg-rose-50 rounded-xl transition-colors">Cancel</button>
@@ -110,22 +129,40 @@ const EditModal = ({ user, onClose, onSave }) => {
 
 // ── ADD MEMBER MODAL ───────────────────────────────────────────────────────────
 const AddMemberModal = ({ open, onClose, onAdd }) => {
-  const [form, setForm] = useState({ name: '', email: '', phone: '', plan: 'Free', status: 'Active', role: 'Member' });
+  const [form, setForm] = useState({ name: '', email: '', phone: '', password: '', plan: 'Free Sakhi', status: 'Active', role: 'Member' });
+  const [showPassword, setShowPassword] = useState(false);
   const field = (label, key, type = 'text', placeholder = '') => (
     <div className="space-y-1.5">
       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{label}</label>
-      <input required type={type} value={form[key]} onChange={e => setForm({ ...form, [key]: e.target.value })} placeholder={placeholder} className="w-full h-12 px-4 bg-rose-50/20 border rounded-xl outline-none focus:border-[#ff69b4] transition-all text-sm font-bold shadow-inner" style={{ borderColor: '#F5E6EA' }} />
+      {key === 'password' ? (
+        <div className="relative">
+          <input
+            required
+            type={showPassword ? 'text' : 'password'}
+            value={form[key]}
+            onChange={e => setForm({ ...form, [key]: e.target.value })}
+            placeholder={placeholder}
+            className="w-full h-12 px-4 pr-11 bg-rose-50/20 border rounded-xl outline-none focus:border-[#ff69b4] transition-all text-sm font-bold shadow-inner"
+            style={{ borderColor: '#F5E6EA' }}
+          />
+          <button type="button" onClick={() => setShowPassword((prev) => !prev)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#ff69b4] transition-colors">
+            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+          </button>
+        </div>
+      ) : (
+        <input required type={type} value={form[key]} onChange={e => setForm({ ...form, [key]: e.target.value })} placeholder={placeholder} className="w-full h-12 px-4 bg-rose-50/20 border rounded-xl outline-none focus:border-[#ff69b4] transition-all text-sm font-bold shadow-inner" style={{ borderColor: '#F5E6EA' }} />
+      )}
     </div>
   );
   return (
     <Modal open={open} onClose={onClose} title="Add New Member" subtitle="Onboard a new sister" icon={UserPlus} iconBg="bg-slate-900">
-      <form onSubmit={(e) => { e.preventDefault(); onAdd(form); onClose(); setForm({ name: '', email: '', phone: '', plan: 'Free', status: 'Active', role: 'Member' }); }} className="space-y-6">
+      <form onSubmit={(e) => { e.preventDefault(); onAdd({ ...form, role: 'Member' }); onClose(); setForm({ name: '', email: '', phone: '', password: '', plan: 'Free Sakhi', status: 'Active', role: 'Member' }); }} className="space-y-6">
         <div className="grid grid-cols-2 gap-4">{field('Full Name', 'name', 'text', 'Megha Iyer')}{field('Phone Number', 'phone', 'text', '+91 91XXX XXXXX')}</div>
         {field('Email Address', 'email', 'email', 'sister@healthsakhi.com')}
-        <div className="grid grid-cols-3 gap-3">
-          <FormDropdown label="Plan" value={form.plan} options={['Free', 'Silver', 'Gold']} onChange={val => setForm({ ...form, plan: val })} />
+        {field('Password', 'password', 'password', '********')}
+        <div className="grid grid-cols-2 gap-3">
+          <FormDropdown label="Plan" value={form.plan} options={['Free Sakhi', 'Premium Pro', 'Advisor Connect+']} onChange={val => setForm({ ...form, plan: val })} />
           <FormDropdown label="Status" value={form.status} options={['Active', 'Inactive']} onChange={val => setForm({ ...form, status: val })} />
-          <FormDropdown label="Role" value={form.role} options={['Member', 'Advisor', 'Partner', 'Admin']} onChange={val => setForm({ ...form, role: val })} />
         </div>
         <div className="flex justify-end gap-3 pt-6 border-t" style={{ borderColor: '#F5E6EA' }}>
           <button type="button" onClick={onClose} className="px-5 py-2.5 text-[10px] font-bold text-slate-500 uppercase tracking-widest hover:bg-rose-50 rounded-xl transition-colors">Abort</button>
@@ -177,26 +214,41 @@ const MailModal = ({ user, onClose }) => {
 
 // ── MAIN COMPONENT ─────────────────────────────────────────────────────────────
 const UserManagement = () => {
-  const [users, setUsers] = useState(INITIAL_USERS);
+  const [users, setUsers] = useState(() => {
+    const saved = readJsonArray(APPROVED_MEMBERS_KEY);
+    return saved.length > 0 ? saved : INITIAL_USERS;
+  });
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editUser, setEditUser] = useState(null);
   const [deleteUser, setDeleteUser] = useState(null);
   const [mailUser, setMailUser] = useState(null);
   const [search, setSearch] = useState('');
   const [showFilter, setShowFilter] = useState(false);
-  const [filters, setFilters] = useState({ status: 'All', plan: 'All', role: 'All' });
+  const [filters, setFilters] = useState({ status: 'All', plan: 'All' });
 
-  const handleSaveEdit = (form) => setUsers(prev => prev.map(u => u.id === editUser.id ? { ...u, ...form } : u));
+  useEffect(() => {
+    writeJsonArray(APPROVED_MEMBERS_KEY, users);
+  }, [users]);
+
+  useEffect(() => {
+    const syncMembers = () => {
+      const saved = readJsonArray(APPROVED_MEMBERS_KEY);
+      if (saved.length > 0) setUsers(saved);
+    };
+    window.addEventListener('storage', syncMembers);
+    return () => window.removeEventListener('storage', syncMembers);
+  }, []);
+
+  const handleSaveEdit = (form) => setUsers(prev => prev.map(u => u.id === editUser.id ? { ...u, ...form, role: 'Member' } : u));
   const handleDelete = (id) => setUsers(prev => prev.filter(u => u.id !== id));
-  const handleAdd = (form) => setUsers(prev => [{ id: Date.now(), progress: 0, active: 'Just now', ...form }, ...prev]);
+  const handleAdd = (form) => setUsers(prev => [{ id: Date.now(), progress: 0, active: 'Just now', role: 'Member', ...form }, ...prev]);
 
   const filtered = users.filter(u => {
     const q = search.toLowerCase();
-    const matchSearch = !q || u.name.toLowerCase().includes(q) || u.phone.includes(q) || u.email.toLowerCase().includes(q) || u.role.toLowerCase().includes(q) || u.plan.toLowerCase().includes(q);
+    const matchSearch = !q || u.name.toLowerCase().includes(q) || u.phone.includes(q) || u.email.toLowerCase().includes(q) || u.plan.toLowerCase().includes(q);
     const matchStatus = filters.status === 'All' || u.status === filters.status;
     const matchPlan = filters.plan === 'All' || u.plan === filters.plan;
-    const matchRole = filters.role === 'All' || u.role === filters.role;
-    return matchSearch && matchStatus && matchPlan && matchRole;
+    return matchSearch && matchStatus && matchPlan;
   });
 
   const exportCSV = () => {
@@ -215,7 +267,7 @@ const UserManagement = () => {
   };
 
   const ActionBtns = ({ user, mobile = false }) => (
-    <div className={`flex items-center gap-1 ${mobile ? '' : 'justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-300'}`}>
+    <div className={`flex items-center gap-1 ${mobile ? '' : 'justify-end transition-opacity duration-300'}`}>
       <button onClick={() => setEditUser(user)} className="p-1.5 text-slate-400 hover:text-health-green hover:bg-health-green/10 rounded-lg transition-all"><Edit2 size={16} /></button>
       <button onClick={() => setDeleteUser(user)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"><UserMinus size={16} /></button>
       <button onClick={() => setMailUser(user)} className="p-1.5 text-slate-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-all"><Mail size={16} /></button>
@@ -254,11 +306,11 @@ const UserManagement = () => {
 
       {showFilter && (
         <div className="bg-white rounded-[2.5rem] border border-black/5 p-8 animate-in slide-in-from-top-4 duration-300 grid grid-cols-1 sm:grid-cols-3 gap-8 shadow-xl">
-          {['status', 'plan', 'role'].map(key => (
+          {['status', 'plan'].map(key => (
             <div key={key} className="space-y-4">
               <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">{key}</p>
               <div className="flex flex-wrap gap-2">
-                {(key === 'status' ? ['All', 'Active', 'Inactive'] : key === 'plan' ? ['All', 'Free', 'Silver', 'Gold'] : ['All', 'Member', 'Advisor', 'Partner', 'Admin']).map(o => (
+                {(key === 'status' ? ['All', 'Active', 'Inactive'] : ['All', 'Free Sakhi', 'Premium Pro', 'Advisor Connect+']).map(o => (
                   <button key={o} onClick={() => setFilters(f => ({ ...f, [key]: o }))} className={`px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${filters[key] === o ? 'bg-[#ff69b4] text-white shadow-lg' : 'bg-rose-50/50 text-[#C4A0AC] hover:bg-rose-50'}`}>{o}</button>
                 ))}
               </div>

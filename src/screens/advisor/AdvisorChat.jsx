@@ -1,28 +1,42 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { Send, Image, Paperclip, MoreVertical, Search, Phone, Video, Smile, ShieldCheck, User, Check, CheckCheck, MessageSquare, CheckCircle } from 'lucide-react';
+import { appendAdvisorMessage, getAdvisorThreads, logCallEvent, markThreadRead, upsertAdvisorThread } from '../../data/advisorFlow';
 
 const AdvisorChat = () => {
-  const sisters = [
-    { id: 1, name: 'Priya Sharma', lastMsg: 'bloated in the evenings...', time: '5m', unread: 2, active: true },
-    { id: 2, name: 'Ananya Iyer', lastMsg: 'Thanks for the session!', time: '1h', unread: 0, active: false },
-    { id: 3, name: 'Sneha Patel', lastMsg: 'Should I continue the vitamins?', time: '2h', unread: 0, active: false },
-    { id: 4, name: 'Kavita Singh', lastMsg: 'The yoga session was great.', time: '1d', unread: 0, active: false },
-  ];
-
   const location = useLocation();
-  const [activeChat, setActiveChat] = React.useState(location.state?.user || null);
+  const [sisters, setSisters] = React.useState(() => getAdvisorThreads());
+  const [activeChat, setActiveChat] = React.useState(() => getAdvisorThreads()[0] || null);
   const [message, setMessage] = React.useState('');
-  const [messages, setMessages] = React.useState([
-    { id: 1, sender: 'Priya Sharma', text: "Hello Doctor, I've been following the PCOD diet you suggested. It's helping with my energy levels!", time: '10:30 AM', type: 'incoming', contentType: 'text' },
-    { id: 2, sender: 'You', text: "That's wonderful to hear, Priya! Are you also managing to get 7-8 hours of sleep?", time: '10:32 AM', type: 'outgoing', status: 'read', contentType: 'text' },
-    { id: 3, sender: 'Priya Sharma', text: "Mostly yes, but some days I feel very bloated in the evenings. Is that normal?", time: '10:35 AM', type: 'incoming', contentType: 'text' },
-  ]);
+  const [messages, setMessages] = React.useState(() => (getAdvisorThreads()[0]?.messages || []));
 
   React.useEffect(() => {
-    if (location.state?.user) {
-      setActiveChat(location.state.user);
-    }
+    const sync = () => {
+      const threads = getAdvisorThreads();
+      setSisters(threads);
+      if (!threads.length) {
+        setActiveChat(null);
+        setMessages([]);
+        return;
+      }
+      if (location.state?.user) {
+        const threaded = upsertAdvisorThread({
+          memberName: location.state.user.name,
+          memberEmail: `${location.state.user.name.toLowerCase().replace(/\s+/g, '.')}@member.healthsakhi`,
+          advisor: 'Dr. Sakshi Sharma'
+        });
+        setActiveChat(threaded);
+        setMessages(threaded.messages || []);
+        markThreadRead(threaded.id);
+        return;
+      }
+      const current = threads.find((t) => t.id === activeChat?.id) || threads[0];
+      setActiveChat(current);
+      setMessages(current.messages || []);
+    };
+    sync();
+    window.addEventListener('storage', sync);
+    return () => window.removeEventListener('storage', sync);
   }, [location.state?.user]);
   const [showEmojiPicker, setShowEmojiPicker] = React.useState(false);
   const [showMoreMenu, setShowMoreMenu] = React.useState(false);
@@ -31,11 +45,15 @@ const AdvisorChat = () => {
   const messagesEndRef = React.useRef(null);
 
   const handleCall = () => {
-    window.alert('Voice call started with ' + activeChat.name);
+    if (!activeChat) return;
+    logCallEvent({ memberName: activeChat.memberName, advisor: activeChat.advisor, source: 'advisor-chat-voice' });
+    window.alert('Voice call started with ' + activeChat.memberName);
   };
 
   const handleVideoCall = () => {
-    window.alert('Video call started with ' + activeChat.name);
+    if (!activeChat) return;
+    logCallEvent({ memberName: activeChat.memberName, advisor: activeChat.advisor, source: 'advisor-chat-video' });
+    window.alert('Video call started with ' + activeChat.memberName);
   };
 
   const handleMore = () => {
@@ -59,7 +77,7 @@ const AdvisorChat = () => {
   };
 
   const createMessage = ({ text, contentType, fileName, imageUrl }) => ({
-    id: messages.length + 1,
+    id: `MSG-${Date.now()}`,
     sender: 'You',
     text,
     time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -86,22 +104,20 @@ const AdvisorChat = () => {
   };
 
   const handleSend = () => {
-    if (!message.trim()) return;
-    const newMsg = {
-      id: messages.length + 1,
-      sender: 'You',
-      text: message,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      type: 'outgoing',
-      status: 'sent'
-    };
-    setMessages([...messages, newMsg]);
+    if (!message.trim() || !activeChat) return;
+    const updatedThread = appendAdvisorMessage({
+      threadId: activeChat.id,
+      senderType: 'advisor',
+      senderName: 'Dr. Sakshi Sharma',
+      text: message.trim()
+    });
+    if (updatedThread) {
+      const threads = getAdvisorThreads();
+      setSisters(threads);
+      setActiveChat(updatedThread);
+      setMessages(updatedThread.messages || []);
+    }
     setMessage('');
-    
-    // Simulate auto-response for demo
-    setTimeout(() => {
-        setMessages(prev => prev.map(m => m.id === newMsg.id ? {...m, status: 'read'} : m));
-    }, 2000);
   };
 
   React.useEffect(() => {
@@ -123,22 +139,26 @@ const AdvisorChat = () => {
         <div className="flex-1 overflow-y-auto divide-y divide-black/5 chat-scrollbar">
            {sisters.map((sister) => (
              <div 
-                key={sister.id} 
-                onClick={() => setActiveChat(sister)}
+                key={sister.id}
+                onClick={() => {
+                  setActiveChat(sister);
+                  setMessages(sister.messages || []);
+                  markThreadRead(sister.id);
+                }}
                 className={`p-4 flex items-center gap-3 cursor-pointer transition-all hover:bg-slate-50 relative ${activeChat?.id === sister.id ? 'bg-emerald-50/50 border-l-4 border-health-green' : ''}`}
              >
                 <div className="relative">
                     <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center font-black text-slate-400 italic text-xs border border-black/5 uppercase">
-                        {sister.name.split(' ').map(n => n[0]).join('')}
+                        {sister.memberName.split(' ').map(n => n[0]).join('')}
                     </div>
                     {sister.active && <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-4 border-white"></div>}
                 </div>
                 <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-center mb-1">
-                        <h3 className="font-black text-slate-800 text-sm tracking-tight truncate">{sister.name}</h3>
+                        <h3 className="font-black text-slate-800 text-sm tracking-tight truncate">{sister.memberName}</h3>
                         <span className="text-[9px] font-black text-slate-400 uppercase">{sister.time}</span>
                     </div>
-                    <p className={`text-xs truncate ${sister.unread > 0 ? 'text-slate-900 font-bold' : 'text-slate-400 font-medium'}`}>{sister.lastMsg}</p>
+                        <p className={`text-xs truncate ${sister.unread > 0 ? 'text-slate-900 font-bold' : 'text-slate-400 font-medium'}`}>{sister.lastMsg}</p>
                 </div>
                 {sister.unread > 0 && (
                     <div className="w-5 h-5 bg-health-green text-white rounded-full flex items-center justify-center text-[9px] font-black">{sister.unread}</div>
@@ -156,10 +176,10 @@ const AdvisorChat = () => {
                <div className="sticky top-0 z-10 px-5 py-3 border-b border-black/5 flex items-center justify-between gap-3 bg-white">
                   <div className="flex items-center gap-3">
                      <div className="w-10 h-10 rounded-2xl bg-health-green text-white flex items-center justify-center font-black italic shadow-lg shadow-health-green/20 uppercase">
-                        {activeChat.name.split(' ').map(n => n[0]).join('')}
+                        {activeChat.memberName.split(' ').map(n => n[0]).join('')}
                      </div>
                      <div>
-                        <h2 className="text-lg font-black text-slate-900 tracking-tight leading-none">{activeChat.name}</h2>
+                        <h2 className="text-lg font-black text-slate-900 tracking-tight leading-none">{activeChat.memberName}</h2>
                         <div className="flex items-center gap-2 mt-2">
                             <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                             <span className="text-[10px] font-black text-health-green uppercase tracking-widest leading-none">Online • Secure Session</span>
@@ -202,25 +222,28 @@ const AdvisorChat = () => {
                     </div>
                   </div>
 
-                  {messages.map((msg) => (
-                    <div key={msg.id} className={`flex ${msg.type === 'outgoing' ? 'justify-end' : 'justify-start'} group animate-in slide-in-from-bottom-2 duration-300`}>
+                 {messages.map((msg) => {
+                    const isOutgoing = msg.senderType ? msg.senderType === 'advisor' : msg.type === 'outgoing';
+                    return (
+                    <div key={msg.id} className={`flex ${isOutgoing ? 'justify-end' : 'justify-start'} group animate-in slide-in-from-bottom-2 duration-300`}>
                        <div className="max-w-[65%] space-y-2">
                           <div className={`px-5 py-4 rounded-[1.75rem] shadow-sm relative ${
-                            msg.type === 'outgoing' 
+                            isOutgoing
                             ? 'bg-slate-900 text-white rounded-tr-none' 
                             : 'bg-white text-slate-800 rounded-tl-none border border-black/5'
                           }`}>
                             <p className="text-sm font-medium leading-relaxed whitespace-pre-wrap break-words">{msg.text}</p>
-                            <div className={`flex items-center gap-2 mt-3 ${msg.type === 'outgoing' ? 'justify-end' : 'justify-start'}`}>
+                            <div className={`flex items-center gap-2 mt-3 ${isOutgoing ? 'justify-end' : 'justify-start'}`}>
                                <span className="text-[9px] font-black uppercase tracking-widest opacity-40">{msg.time}</span>
-                               {msg.type === 'outgoing' && (
+                               {isOutgoing && (
                                   msg.status === 'read' ? <CheckCheck size={12} className="text-health-green" /> : <Check size={12} className="opacity-40" />
                                )}
                             </div>
                           </div>
                        </div>
                     </div>
-                  ))}
+                    );
+                 })}
                   <div ref={messagesEndRef} className="h-0" />
                </div>
 
@@ -295,9 +318,9 @@ const AdvisorChat = () => {
         <div className="w-64 bg-slate-50 border-l border-black/5 flex flex-col h-full min-h-0 animate-in slide-in-from-right duration-500">
            <div className="p-5 border-b border-black/5 bg-white text-center">
               <div className="w-20 h-20 rounded-[1.75rem] bg-slate-50 flex items-center justify-center font-black text-slate-400 border border-black/5 mx-auto mb-5 text-xl italic shadow-inner">
-                 {activeChat.name.split(' ').map(n => n[0]).join('')}
+                 {activeChat.memberName.split(' ').map(n => n[0]).join('')}
               </div>
-              <h3 className="text-xl font-black text-slate-900 tracking-tight">{activeChat.name}</h3>
+              <h3 className="text-xl font-black text-slate-900 tracking-tight">{activeChat.memberName}</h3>
               <p className="text-[10px] font-black text-health-green uppercase tracking-[0.2em] mt-2">Health Passport v2.1</p>
            </div>
            

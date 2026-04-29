@@ -7,6 +7,7 @@ import {
   Activity, Droplets, Heart, ArrowRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getCallEvents } from '../../data/advisorFlow';
 
 const AdvisorDashboard = () => {
    const navigate = useNavigate();
@@ -16,10 +17,29 @@ const AdvisorDashboard = () => {
    const [isMuted, setIsMuted] = React.useState(false);
    const [isVideoOff, setIsVideoOff] = React.useState(false);
 
+   const [memberBookings, setMemberBookings] = React.useState([]);
+   const [incomingCalls, setIncomingCalls] = React.useState([]);
+
+   React.useEffect(() => {
+      const syncData = () => {
+         try {
+            const parsed = JSON.parse(localStorage.getItem('hs_booked_sessions') || '[]');
+            setMemberBookings(Array.isArray(parsed) ? parsed : []);
+         } catch (error) {
+            setMemberBookings([]);
+         }
+         setIncomingCalls(getCallEvents().filter((event) => event.status === 'incoming'));
+      };
+
+      syncData();
+      window.addEventListener('storage', syncData);
+      return () => window.removeEventListener('storage', syncData);
+   }, []);
+
    const statsData = {
       'Today': [
          { name: 'Sessions Today', value: '12', icon: CheckCircle, color: '#ff69b4' },
-         { name: 'Upcoming Calls', value: '3', icon: Calendar, color: '#3b82f6' },
+         { name: 'Upcoming Calls', value: String(Math.max(memberBookings.length, incomingCalls.length || 0)), icon: Calendar, color: '#3b82f6' },
          { name: 'Today Earnings', value: '₹4,800', icon: DollarSign, color: '#f59e0b' },
          { name: 'Adherence', value: '94%', icon: TrendingUp, color: '#10b981' },
       ],
@@ -32,7 +52,14 @@ const AdvisorDashboard = () => {
    };
 
    const appointmentsData = {
-      'Today': [
+      'Today': memberBookings.length > 0 ? memberBookings.slice(0, 3).map((booking) => ({
+         name: booking.memberName || 'Member User',
+         time: booking.slot || booking.time || '10:00 AM',
+         topic: booking.topic || 'Wellness Consultation',
+         type: 'Video',
+         healthStatus: booking.status || 'Pending',
+         mood: 'Focused'
+      })) : [
          { name: 'Priya Sharma', time: '10:30 AM', topic: 'PCOD Consultation', type: 'Video', healthStatus: 'Day 14 - High Fertility', mood: 'Happy' },
          { name: 'Sonal Patel', time: '02:00 PM', topic: 'Diet Planning', type: 'Audio', healthStatus: 'Day 22 - Luteal Phase', mood: 'Tired' },
          { name: 'Ananya Iyer', time: '04:30 PM', topic: 'Follow-up', type: 'Video', healthStatus: 'Day 5 - Menstruation', mood: 'Sad' },

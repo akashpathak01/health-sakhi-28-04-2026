@@ -117,7 +117,7 @@ const SakhiCMS = () => {
                   </div>
                 </td>
                 <td className="px-6 py-5">
-                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center gap-2 transition-opacity">
                     <button className="p-2 hover:bg-[#ff69b4] hover:text-white rounded-lg transition-all text-[#C4A0AC]"><Edit size={16} /></button>
                     <button className="p-2 hover:bg-rose-100 rounded-lg transition-all text-red-500"><Trash2 size={16} /></button>
                     <button className="p-2 text-[#C4A0AC]"><MoreVertical size={16} /></button>

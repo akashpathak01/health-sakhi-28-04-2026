@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Filter, MessageSquare, Calendar, ChevronRight, UserCheck, Activity, CheckCircle, X } from 'lucide-react';
+import { getAssignedMembersForAdvisor, upsertAdvisorThread } from '../../data/advisorFlow';
 
 const UserProfilesScreen = () => {
   const navigate = useNavigate();
@@ -14,12 +15,13 @@ const UserProfilesScreen = () => {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const sisters = [
-    { id: 'HS-4821', name: 'Ananya Iyer', age: 28, condition: 'PCOD Management', lastSync: '2h ago', status: 'Active', adherence: 85 },
-    { id: 'HS-4822', name: 'Ritu Verma', age: 42, condition: 'Menopause Journey', lastSync: '1d ago', status: 'Follow-up', adherence: 60 },
-    { id: 'HS-4823', name: 'Sneha Patel', age: 31, condition: 'Pregnancy Care', lastSync: '5m ago', status: 'Active', adherence: 92 },
-    { id: 'HS-4824', name: 'Kavita Singh', age: 25, condition: 'Stress & Anxiety', lastSync: '3d ago', status: 'Idle', adherence: 40 },
-  ];
+  const [sisters, setSisters] = React.useState(() => getAssignedMembersForAdvisor('Dr. Sakshi Sharma'));
+
+  React.useEffect(() => {
+    const sync = () => setSisters(getAssignedMembersForAdvisor('Dr. Sakshi Sharma'));
+    window.addEventListener('storage', sync);
+    return () => window.removeEventListener('storage', sync);
+  }, []);
 
   const filteredSisters = sisters.filter(s => {
     const matchesSearch = s.name.toLowerCase().includes(search.toLowerCase()) || 
@@ -87,7 +89,14 @@ const UserProfilesScreen = () => {
                    </div>
 
                    <div className="flex items-center justify-center md:justify-end gap-2">
-                      <button onClick={() => navigate('/advisor/chat', { state: { user: sister } })} className="p-2.5 bg-health-soft text-health-dark rounded-xl hover:bg-health-green hover:text-white transition-all shadow-sm">
+                      <button onClick={() => {
+                        upsertAdvisorThread({
+                          memberName: sister.name,
+                          memberEmail: sister.email,
+                          advisor: 'Dr. Sakshi Sharma'
+                        });
+                        navigate('/advisor/chat', { state: { user: sister } });
+                      }} className="p-2.5 bg-health-soft text-health-dark rounded-xl hover:bg-health-green hover:text-white transition-all shadow-sm">
                          <MessageSquare size={16} />
                       </button>
                       <button onClick={() => navigate('/advisor/appointments')} className="p-2.5 bg-health-soft text-health-dark rounded-xl hover:bg-health-green hover:text-white transition-all shadow-sm">

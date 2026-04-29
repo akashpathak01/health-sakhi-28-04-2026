@@ -600,7 +600,7 @@ const BookCMS = () => {
                     </span>
                   </td>
                   <td className="px-3 sm:px-5 py-3 sm:py-4 text-right">
-                    <div className={`flex items-center justify-end gap-1 transition-all duration-300 ${selectedIds.includes(book.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                    <div className="flex items-center justify-end gap-1 transition-all duration-300">
                       <button onClick={() => setViewBook(book)} className="p-1.5 sm:p-2 bg-white border border-black/5 text-slate-400 rounded-lg hover:bg-blue-50 hover:text-blue-500 transition-all shadow-sm active:scale-95"><Eye size={14} /></button>
                       <button onClick={() => { setEditBook(book); setFormData(book); }} className="p-1.5 sm:p-2 bg-white border border-black/5 text-slate-400 rounded-lg hover:bg-health-green/10 hover:text-health-green transition-all shadow-sm active:scale-95"><Edit2 size={14} /></button>
                       <button onClick={() => setDeleteBook(book)} className="p-1.5 sm:p-2 bg-white border border-black/5 text-slate-400 rounded-lg hover:bg-red-50 hover:text-red-500 transition-all shadow-sm active:scale-95"><Trash2 size={14} /></button>

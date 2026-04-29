@@ -280,7 +280,7 @@ const PaymentManagement = () => {
                        </span>
                     </td>
                     <td className="px-4 py-4 text-right">
-                       <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                       <div className="flex items-center justify-end gap-2 transition-all duration-300">
                           <button onClick={() => setViewPay(p)} className="p-2 bg-white border border-black/5 text-slate-400 rounded-lg hover:text-blue-500 hover:border-blue-200 transition-all shadow-sm"><Eye size={16} /></button>
                           <button onClick={(e) => { e.stopPropagation(); handleDownloadInvoice(p); }} className={`p-2 bg-white border border-black/5 rounded-lg transition-all shadow-sm ${isDownloading === p.id ? 'text-health-green' : 'text-slate-400 hover:text-health-green hover:border-health-green/20'}`}>
                               {isDownloading === p.id ? <CheckCircle size={16} className="animate-pulse" /> : <Download size={16} />}

@@ -176,7 +176,7 @@ const AdvisorCMS = () => {
                        </span>
                     </td>
                     <td className="px-4 py-4 text-right">
-                       <div className="flex items-center justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                       <div className="flex items-center justify-end gap-1.5 transition-all duration-300">
                           <button onClick={() => setViewAdv(adv)} className="p-2 bg-white border border-black/5 text-slate-400 rounded-lg hover:bg-blue-50 hover:text-blue-500 transition-all shadow-sm"><Eye size={14} /></button>
                           <button onClick={() => { setEditAdv(adv); setFormData(adv); }} className="p-2 bg-white border border-black/5 text-slate-400 rounded-lg hover:bg-health-green/10 hover:text-health-green transition-all shadow-sm"><Edit2 size={14} /></button>
                           <button onClick={() => setDeleteId(adv.id)} className="p-2 bg-white border border-black/5 text-slate-400 rounded-lg hover:bg-red-50 hover:text-red-500 transition-all shadow-sm"><Trash2 size={14} /></button>

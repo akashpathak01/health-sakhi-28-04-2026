@@ -4,14 +4,39 @@ import {
   Search, Filter, ExternalLink, Calendar, CheckCircle 
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { getAssignedMembersForAdvisor } from '../../data/advisorFlow';
 
 const AdvisorConsultations = () => {
   const [activeTab, setActiveTab] = useState('relationship');
+  const [selectedId, setSelectedId] = useState(null);
+  const [consultations, setConsultations] = useState(() =>
+    getAssignedMembersForAdvisor('Dr. Sakshi Sharma').map((member, idx) => ({
+      id: member.id || idx + 1,
+      user: member.name,
+      type: member.condition?.toLowerCase().includes('stress') ? 'Mental Health' : 'Relationship',
+      status: member.status === 'Active' ? 'Active' : 'Pending',
+      date: member.nextSession || 'Upcoming',
+      lastMessage: member.lastMessage || 'Awaiting advisor guidance.'
+    }))
+  );
 
-  const consultations = [
-    { id: 1, user: 'Priya Verma', type: 'Relationship', status: 'Pending', date: '20 Oct 2023', lastMessage: 'Need advice on boundaries.' },
-    { id: 2, user: 'Anjali Sharma', type: 'Mental Health', status: 'Active', date: '18 Oct 2023', lastMessage: 'Feeling better with the routines.' },
-  ];
+  React.useEffect(() => {
+    const sync = () => {
+      const next = getAssignedMembersForAdvisor('Dr. Sakshi Sharma').map((member, idx) => ({
+        id: member.id || idx + 1,
+        user: member.name,
+        type: member.condition?.toLowerCase().includes('stress') ? 'Mental Health' : 'Relationship',
+        status: member.status === 'Active' ? 'Active' : 'Pending',
+        date: member.nextSession || 'Upcoming',
+        lastMessage: member.lastMessage || 'Awaiting advisor guidance.'
+      }));
+      setConsultations(next);
+    };
+    window.addEventListener('storage', sync);
+    return () => window.removeEventListener('storage', sync);
+  }, []);
+
+  const selectedConsultation = consultations.find((c) => c.id === selectedId) || consultations[0];
 
   return (
     <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-8">
@@ -36,6 +61,7 @@ const AdvisorConsultations = () => {
             {consultations.map((c) => (
               <div 
                 key={c.id} 
+                onClick={() => setSelectedId(c.id)}
                 className="p-5 bg-white border border-rose-100 rounded-[2rem] hover:ring-2 hover:ring-[#ff69b4]/20 transition-all cursor-pointer group"
               >
                 <div className="flex items-center justify-between mb-3">
@@ -69,10 +95,10 @@ const AdvisorConsultations = () => {
              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="w-14 h-14 rounded-2xl overflow-hidden">
-                    <img src="https://ui-avatars.com/api/?name=Priya+Verma&background=FDEEF1&color=ff69b4" alt="User" />
+                    <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(selectedConsultation?.user || 'Member')}&background=FDEEF1&color=ff69b4`} alt="User" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-black text-[#2D1520]">Priya Verma</h3>
+                    <h3 className="text-xl font-black text-[#2D1520]">{selectedConsultation?.user || 'Member'}</h3>
                     <p className="text-[11px] font-black uppercase tracking-widest text-[#ff69b4]">Member since Sep 2023</p>
                   </div>
                 </div>
@@ -82,12 +108,12 @@ const AdvisorConsultations = () => {
              </div>
 
              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-               {[
-                 { label: 'Mood Log', value: 'Stressed', icon: Heart },
-                 { label: 'Last Chat', value: '2h ago', icon: MessageSquare },
-                 { label: 'Session', value: 'Tomorrow', icon: Calendar },
-                 { label: 'Tier', value: 'Gold', icon: StarIcon },
-               ].map((stat, i) => (
+                {[
+                  { label: 'Case Type', value: selectedConsultation?.type || 'Relationship', icon: Heart },
+                  { label: 'Last Chat', value: selectedConsultation?.lastMessage ? 'Synced' : 'No chat', icon: MessageSquare },
+                  { label: 'Session', value: selectedConsultation?.date || 'Upcoming', icon: Calendar },
+                  { label: 'Status', value: selectedConsultation?.status || 'Pending', icon: StarIcon },
+                ].map((stat, i) => (
                  <div key={i} className="p-4 bg-rose-50/30 rounded-2xl border border-rose-100">
                     <stat.icon size={14} className="mb-2 text-[#ff69b4]" />
                     <p className="text-[14px] font-black text-[#2D1520]">{stat.value}</p>

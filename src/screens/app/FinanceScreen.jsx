@@ -334,7 +334,7 @@ const FinanceScreen = () => {
                                              </p>
                                              <span className="text-[8px] font-black uppercase text-[#C4A0AC]">{cat.label}</span>
                                           </div>
-                                          <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                          <div className="flex items-center gap-2 transition-opacity">
                                              <button 
                                                 onClick={(e) => { e.stopPropagation(); openEditModal(t); }} 
                                                 className="p-2 bg-rose-50 text-rose-400 hover:bg-rose-500 hover:text-white rounded-full transition-colors"

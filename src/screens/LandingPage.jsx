@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { Heart, Sparkles, BookOpen, Video, Users, Check, Star, ArrowRight, Play, Pause, MessageCircle, Activity, ShieldCheck, Zap, Globe, HeartPulse, DollarSign, CheckCircle } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { defaultPlans, MEMBER_PLAN_KEY, PLAN_STORAGE_KEY } from '../data/planCatalog';
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -63,6 +64,20 @@ const LandingPage = () => {
   };
 
   const [isPlayingDemo, setIsPlayingDemo] = useState(true);
+  const [pricingPlans, setPricingPlans] = useState(defaultPlans);
+
+  useEffect(() => {
+    const savedPlans = localStorage.getItem(PLAN_STORAGE_KEY);
+    if (!savedPlans) return;
+    try {
+      const parsedPlans = JSON.parse(savedPlans);
+      if (Array.isArray(parsedPlans) && parsedPlans.length > 0) {
+        setPricingPlans(parsedPlans);
+      }
+    } catch (error) {
+      setPricingPlans(defaultPlans);
+    }
+  }, []);
 
   return (
     <div className="w-full overflow-x-hidden" style={{ background: 'linear-gradient(135deg, rgb(252, 228, 236) 0%, rgb(237, 231, 246) 50%, rgb(255, 243, 224) 100%)' }}>
@@ -586,114 +601,68 @@ const LandingPage = () => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-end w-full mb-8">
-            {/* Free Plan */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="bg-[#FDF0F3] p-8 rounded-[2rem] border border-white/50"
-            >
-              <h3 className="text-lg font-black text-[#2D1520] mb-1">Sakhi Free</h3>
-              <p className="text-[10px] font-medium text-[#8E7F84] mb-6">Start your healing journey at no cost.</p>
+            {pricingPlans.map((plan, idx) => {
+              const yearlyPrice = plan.duration === '12 Months'
+                ? Math.round(Number(plan.price || 0) * 0.65)
+                : Number(plan.price || 0);
+              const displayPrice = Number(plan.price || 0) === 0
+                ? 'Free'
+                : `₹${isYearly ? yearlyPrice.toLocaleString() : Number(plan.price).toLocaleString()}`;
+              const isPopular = plan.highlightTag === 'Most Popular';
+              const isInactive = plan.status !== 'Active';
+              const isDarkCard = idx === 1;
 
-              <div className="mb-6">
-                <span className="text-3xl font-black text-[#D17B88]">Free</span>
-              </div>
-
-              <div className="space-y-3 mb-8">
-                {[
-                  "Access to 10 free videos",
-                  "AI Sakhi (5 chats/day)",
-                  "1 free healing book",
-                  "Mood tracker (basic)",
-                  "Community access"
-                ].map((feat, i) => (
-                  <div key={i} className="flex items-center gap-2.5 text-xs font-medium text-[#6B5E63]">
-                    <Check size={12} className="text-[#D17B88]" />
-                    {feat}
+              return (
+                <motion.div
+                  key={plan.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  className={`${isDarkCard ? 'bg-[#1A0B13] text-white shadow-2xl scale-105 border border-white/5' : 'bg-[#FDF0F3] border border-white/50'} p-8 rounded-[2rem] relative ${isInactive ? 'opacity-70' : ''}`}
+                >
+                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#B197B0] text-white px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest">
+                    {isInactive ? 'Coming Soon' : (plan.highlightTag || 'Plan')}
                   </div>
-                ))}
-              </div>
 
-              <button className="w-full py-3 rounded-xl border-2 border-[#D17B88]/20 text-[#D17B88] font-black text-[10px] uppercase tracking-widest hover:bg-[#D17B88] hover:text-white transition-all">
-                Get Started Free
-              </button>
-            </motion.div>
+                  <h3 className={`text-lg font-black mb-1 ${isDarkCard ? 'text-white' : 'text-[#2D1520]'}`}>{plan.name}</h3>
+                  <p className={`text-[10px] font-medium mb-6 ${isDarkCard ? 'text-white/50' : 'text-[#8E7F84]'}`}>
+                    {plan.shortDescription || `Built for ${plan.name} members.`}
+                  </p>
 
-            {/* Premium Plan (Highlighted) */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              className="bg-[#1A0B13] p-8 py-10 rounded-[2rem] relative shadow-2xl scale-105 border border-white/5"
-            >
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#B197B0] text-white px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest">Most Popular</div>
-
-              <h3 className="text-lg font-black text-white mb-1">Sakhi Premium</h3>
-              <p className="text-[10px] font-medium text-white/50 mb-6 max-w-[180px]">The full healing experience — our most loved plan.</p>
-
-              <div className="mb-6 flex items-baseline gap-1">
-                <span className="text-3xl font-black text-white">{isYearly ? '₹3,999' : '₹499'}</span>
-                <span className="text-xs font-bold text-white/40">/{isYearly ? 'yr' : 'mo'}</span>
-              </div>
-
-              <div className="space-y-3 mb-8">
-                {[
-                  "Unlimited videos & courses",
-                  "AI Sakhi (unlimited chats)",
-                  "Full book library (50+ books)",
-                  "Mood tracker + history",
-                  "1 advisor session/month",
-                  "Personalized healing plan",
-                  "Exclusive wellness programs"
-                ].map((feat, i) => (
-                  <div key={i} className="flex items-center gap-2.5 text-xs font-medium text-white/80">
-                    <Check size={12} className="text-[#B197B0]" />
-                    {feat}
+                  <div className="mb-6 flex items-baseline gap-1">
+                    <span className={`text-3xl font-black ${isDarkCard ? 'text-white' : 'text-[#D17B88]'}`}>{displayPrice}</span>
+                    {displayPrice !== 'Free' && (
+                      <span className={`text-xs font-bold ${isDarkCard ? 'text-white/40' : 'text-[#8E7F84]/60'}`}>/{isYearly ? 'yr' : 'plan'}</span>
+                    )}
                   </div>
-                ))}
-              </div>
 
-              <button className="w-full py-3 bg-gradient-to-r from-[#B197B0] to-[#9079C1] text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:scale-105 transition-all">
-                Start Premium Journey
-              </button>
-            </motion.div>
-
-            {/* Elite Plan */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="bg-[#FFF9EE] p-8 rounded-[2rem] border border-white/50"
-            >
-              <h3 className="text-lg font-black text-[#2D1520] mb-1">Sakhi Elite</h3>
-              <p className="text-[10px] font-medium text-[#8E7F84] mb-6">Ultimate wellness transformation plan.</p>
-
-              <div className="mb-6 flex items-baseline gap-1">
-                <span className="text-3xl font-black text-[#CCAA3D]">{isYearly ? '₹7,999' : '₹999'}</span>
-                <span className="text-xs font-bold text-[#8E7F84]/40">/{isYearly ? 'yr' : 'mo'}</span>
-              </div>
-
-              <div className="space-y-3 mb-8">
-                {[
-                  "Everything in Premium",
-                  "4 advisor sessions/month",
-                  "Priority AI Sakhi support",
-                  "Custom nutrition plans",
-                  "Exclusive masterclasses",
-                  "1-on-1 wellness coaching"
-                ].map((feat, i) => (
-                  <div key={i} className="flex items-center gap-2.5 text-xs font-medium text-[#6B5E63]">
-                    <Check size={12} className="text-[#CCAA3D]" />
-                    {feat}
+                  <div className="space-y-3 mb-8">
+                    {(plan.features || [
+                      `${plan.videos || 'Limited'} videos access`,
+                      `${plan.books || 'Limited'} books / library`,
+                      `${plan.advisorSessions || '0/month'} advisor sessions`,
+                      plan.aiSakhiChat ? 'AI Sakhi chat enabled' : 'AI Sakhi chat disabled'
+                    ]).map((feat, i) => (
+                      <div key={i} className={`flex items-center gap-2.5 text-xs font-medium ${isDarkCard ? 'text-white/80' : 'text-[#6B5E63]'}`}>
+                        <Check size={12} className={isDarkCard ? 'text-[#B197B0]' : 'text-[#D17B88]'} />
+                        {feat}
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
 
-              <button className="w-full py-3 rounded-xl border-2 border-[#CCAA3D]/20 text-[#CCAA3D] font-black text-[10px] uppercase tracking-widest hover:bg-[#CCAA3D] hover:text-white transition-all">
-                Go Elite
-              </button>
-            </motion.div>
+                  <button
+                    disabled={isInactive}
+                    onClick={() => {
+                      localStorage.setItem(MEMBER_PLAN_KEY, plan.id);
+                      navigate('/login');
+                    }}
+                    className={`w-full py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${isDarkCard ? 'bg-gradient-to-r from-[#B197B0] to-[#9079C1] text-white shadow-lg hover:scale-105' : 'border-2 border-[#D17B88]/20 text-[#D17B88] hover:bg-[#D17B88] hover:text-white'} ${isInactive ? 'cursor-not-allowed opacity-70 hover:scale-100' : ''}`}
+                  >
+                    {isInactive ? 'Not Available Yet' : (isPopular ? 'Start Premium Journey' : 'Choose Plan')}
+                  </button>
+                </motion.div>
+              );
+            })}
           </div>
 
           <div className="text-center">

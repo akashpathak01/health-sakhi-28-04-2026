@@ -1,5 +1,17 @@
 import React from 'react';
 import { Calendar as CalendarIcon, Clock, Video, Phone, CheckCircle, XCircle, Search, X, ShieldCheck, MapPin } from 'lucide-react';
+import { updateBookedSessionStatus } from '../../data/advisorFlow';
+
+const SESSION_STORAGE_KEY = 'hs_booked_sessions';
+
+const getMemberBookings = () => {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(SESSION_STORAGE_KEY) || '[]');
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    return [];
+  }
+};
 
 const AdvisorAppointments = () => {
   const [search, setSearch] = React.useState('');
@@ -7,13 +19,44 @@ const AdvisorAppointments = () => {
   const [showConfirmModal, setShowConfirmModal] = React.useState(null);
   const [tempSchedule, setTempSchedule] = React.useState({ date: '', time: '' });
   const [toast, setToast] = React.useState(null);
-  const [appointments, setAppointments] = React.useState([
+  const [appointments, setAppointments] = React.useState(() => {
+    const mapped = getMemberBookings().map((booking, idx) => ({
+      id: booking.id || idx + 1,
+      name: booking.memberName || 'Member User',
+      date: booking.date || 'TBD',
+      time: booking.slot || booking.time || '10:00',
+      duration: booking.duration || '15m',
+      type: 'Video',
+      topic: booking.topic || 'Wellness Session',
+      status: booking.status === 'Completed' ? 'Completed' : booking.status === 'Confirmed' ? 'Confirmed' : 'Pending'
+    }));
+    if (mapped.length > 0) return mapped;
+    return [
     { id: 1, name: 'Priya Sharma', date: '2023-10-14', time: '10:30', duration: '30m', type: 'Video', topic: 'Women Health', status: 'Pending' },
     { id: 2, name: 'Ananya Iyer', date: '2023-10-14', time: '11:30', duration: '15m', type: 'Audio', topic: 'Relationships', status: 'Pending' },
     { id: 3, name: 'Megha Singh', date: '2023-10-12', time: '09:00', duration: '30m', type: 'Video', topic: 'Emotional Healing', status: 'Completed' },
     { id: 4, name: 'Sonal Verma', date: '2023-10-12', time: '11:00', duration: '15m', type: 'Audio', topic: 'Heart Care', status: 'Completed' },
     { id: 5, name: 'Divya Rao', date: '2023-10-13', time: '10:00', duration: '30m', type: 'Video', topic: 'Food & Cravings', status: 'Pending' },
-  ]);
+    ];
+  });
+
+  React.useEffect(() => {
+    const sync = () => {
+      const latest = getMemberBookings().map((booking, idx) => ({
+        id: booking.id || idx + 1,
+        name: booking.memberName || 'Member User',
+        date: booking.date || 'TBD',
+        time: booking.slot || booking.time || '10:00',
+        duration: booking.duration || '15m',
+        type: 'Video',
+        topic: booking.topic || 'Wellness Session',
+        status: booking.status === 'Completed' ? 'Completed' : booking.status === 'Confirmed' ? 'Confirmed' : 'Pending'
+      }));
+      if (latest.length > 0) setAppointments(latest);
+    };
+    window.addEventListener('storage', sync);
+    return () => window.removeEventListener('storage', sync);
+  }, []);
 
   const initiateConfirm = (apt) => {
     setTempSchedule({ date: apt.date, time: apt.time });
@@ -26,9 +69,10 @@ const AdvisorAppointments = () => {
   };
 
   const finalizeConfirm = () => {
-    setAppointments(appointments.map(apt => 
+    setAppointments(appointments.map(apt =>
       apt.id === showConfirmModal.id ? { ...apt, status: 'Confirmed', date: tempSchedule.date, time: tempSchedule.time } : apt
     ));
+    updateBookedSessionStatus(showConfirmModal.id, 'Confirmed');
     showToast(`Confirmed for ${tempSchedule.date} at ${tempSchedule.time}`);
     setShowConfirmModal(null);
   };
@@ -136,7 +180,7 @@ const AdvisorAppointments = () => {
                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Consultation Date</label>
                    <div className="relative group">
                       <CalendarIcon size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-health-green transition-colors" />
-                      <input type="date" value={tempSchedule.date} onChange={e => setTempSchedule({...tempSchedule, date: e.target.value})} className="w-full h-12 pl-10 pr-4 bg-slate-50 border border-black/5 rounded-2xl font-bold text-sm text-black outline-none focus:bg-white focus:border-health-green appearance-none" style={{ color: 'black' }} />
+                      <input type="text" value={tempSchedule.date} onChange={e => setTempSchedule({...tempSchedule, date: e.target.value})} className="w-full h-12 pl-10 pr-4 bg-slate-50 border border-black/5 rounded-2xl font-bold text-sm text-black outline-none focus:bg-white focus:border-health-green appearance-none" style={{ color: 'black' }} />
                    </div>
                 </div>
 

@@ -296,7 +296,7 @@ const TodoScreen = () => {
                          </div>
                       </div>
 
-                      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                      <div className="flex items-center gap-2 transition-all">
                         <button
                           onClick={(e) => { e.stopPropagation(); startEdit(task); }}
                           className="w-10 h-10 rounded-2xl bg-white border border-[#F5E6EA] text-[#C4A0AC] flex items-center justify-center shadow-md hover:text-[#ff69b4] hover:bg-rose-50"

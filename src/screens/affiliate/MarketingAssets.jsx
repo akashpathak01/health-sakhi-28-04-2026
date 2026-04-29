@@ -61,14 +61,14 @@ const MarketingAssets = () => {
              filtered.map((asset, i) => (
                 <div key={i} className="bg-white rounded-[1.5rem] border border-black/5 shadow-sm overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-500 animate-in zoom-in-95">
                    <div className={`aspect-video ${asset.color} p-4 flex items-center justify-center relative overflow-hidden`}>
-                      <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                     <div className="absolute inset-0 bg-white/40 backdrop-blur-[2px] transition-opacity"></div>
                       {asset.type === 'Image' && <ImageIcon size={36} strokeWidth={1} className="group-hover:scale-110 transition-transform duration-700 relative z-10" />}
                       {asset.type === 'Video' && <Video size={36} strokeWidth={1} className="group-hover:scale-110 transition-transform duration-700 relative z-10" />}
                       {asset.type === 'Zip' && <FileText size={36} strokeWidth={1} className="group-hover:scale-110 transition-transform duration-700 relative z-10" />}
                       
                       {asset.type === 'Video' && (
                          <div className="absolute inset-0 flex items-center justify-center z-20">
-                            <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all scale-50 group-hover:scale-100 duration-500 shadow-xl">
+                            <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center transition-all duration-500 shadow-xl">
                                <Play size={12} fill="currentColor" className="text-slate-900 ml-0.5" />
                             </div>
                          </div>

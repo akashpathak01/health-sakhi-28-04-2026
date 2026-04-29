@@ -274,7 +274,7 @@ const ProfileScreen = () => {
                   Manage Plan
                 </button>
                 <button 
-                  onClick={() => alert('Receipts functionality coming soon! 🌸')}
+                  onClick={() => navigate('/app/receipts')}
                   className="px-6 py-3 bg-white border rounded-xl font-bold text-xs uppercase tracking-widest transition-all hover:bg-rose-50 active:scale-95" 
                   style={{ borderColor: '#F5E6EA', color: '#ff69b4' }}
                 >
@@ -323,8 +323,8 @@ const ProfileScreen = () => {
         <div className="lg:col-span-12 pt-12 pb-6">
           <button
             onClick={handleLogout}
-            className="w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all bg-rose-50 hover:bg-[#ff69b4] hover:text-white hover:shadow-lg active:scale-95 group"
-            style={{ color: '#ff69b4' }}
+            className="w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all bg-rose-50 hover:bg-rose-100 hover:shadow-sm active:scale-95 group border border-rose-100"
+            style={{ color: '#d04f8f' }}
           >
             <LogOut size={18} className="transition-transform group-hover:-translate-x-1" />
             Sign Out of Dashboard

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, Clock, Video, Star, Shield, ChevronRight, CheckCircle2, Sparkles, X, CheckCircle, ArrowLeft, User, MessageSquare } from 'lucide-react';
+import { appendAdvisorMessage, logCallEvent, markThreadRead, upsertAdvisorThread } from '../../data/advisorFlow';
 
 const SESSION_STORAGE_KEY = 'hs_booked_sessions';
 
@@ -101,6 +102,17 @@ const SuccessScreen = ({ booking, onReset }) => (
 
 // ── Main Screen ──────────────────────────────────────────────────────────────
 const SessionBookingScreen = () => {
+  const currentMember = React.useMemo(() => {
+    try {
+      const sessionUser = JSON.parse(sessionStorage.getItem('hs_current_member') || '{}');
+      return {
+        name: sessionUser.name || 'Member User',
+        email: sessionUser.email || 'member@gmail.com'
+      };
+    } catch (error) {
+      return { name: 'Member User', email: 'member@gmail.com' };
+    }
+  }, []);
   const [selectedAdvisor, setSelectedAdvisor] = useState(null);
   const [selectedDay, setSelectedDay] = useState(0);
   const [selectedSlot, setSelectedSlot] = useState(null);
@@ -110,6 +122,10 @@ const SessionBookingScreen = () => {
   const [step, setStep] = useState('list'); // list | confirm | success
   const [booking, setBooking] = useState(null);
   const [showAll, setShowAll] = useState(false);
+  const [chatModalSession, setChatModalSession] = useState(null);
+  const [chatInput, setChatInput] = useState('');
+  const [chatThreadId, setChatThreadId] = useState(null);
+  const [chatMessages, setChatMessages] = useState([]);
   const [mySessions, setMySessions] = useState(() => {
     const saved = getBookedSessions();
     return saved.length > 0 ? saved : DUMMY_SESSIONS;
@@ -130,18 +146,70 @@ const SessionBookingScreen = () => {
     if (!selectedSlot || !topic || !name) return;
     const newBooking = {
       id: `HS-${Math.floor(100000 + Math.random() * 900000)}`,
+      memberName: name || currentMember.name,
+      memberEmail: currentMember.email,
       advisor: selectedAdvisor.name,
       advisorImg: selectedAdvisor.image,
       date: days[selectedDay].label + ', ' + days[selectedDay].date,
       slot: selectedSlot,
       duration: durations[selectedDuration].label,
       topic,
+      status: 'Pending',
       bookedAt: new Date().toISOString(),
     };
     saveSession(newBooking);
     setMySessions(prev => [newBooking, ...prev]);
+    upsertAdvisorThread({
+      memberName: newBooking.memberName,
+      memberEmail: newBooking.memberEmail,
+      advisor: newBooking.advisor
+    });
     setBooking(newBooking);
     setStep('success');
+  };
+
+  const handleMemberChat = (session) => {
+    const thread = upsertAdvisorThread({
+      memberName: session.memberName || currentMember.name,
+      memberEmail: session.memberEmail || currentMember.email,
+      advisor: session.advisor
+    });
+    markThreadRead(thread.id);
+    setChatModalSession(session);
+    setChatThreadId(thread.id);
+    setChatMessages(thread.messages || []);
+    setChatInput('');
+  };
+
+  const handleSendModalChat = () => {
+    if (!chatModalSession || !chatInput.trim() || !chatThreadId) return;
+    const thread = upsertAdvisorThread({
+      memberName: chatModalSession.memberName || currentMember.name,
+      memberEmail: chatModalSession.memberEmail || currentMember.email,
+      advisor: chatModalSession.advisor
+    });
+    appendAdvisorMessage({
+      threadId: chatThreadId,
+      senderType: 'member',
+      senderName: chatModalSession.memberName || currentMember.name,
+      text: chatInput.trim()
+    });
+    const refreshed = upsertAdvisorThread({
+      memberName: chatModalSession.memberName || currentMember.name,
+      memberEmail: chatModalSession.memberEmail || currentMember.email,
+      advisor: chatModalSession.advisor
+    });
+    setChatMessages(refreshed.messages || []);
+    setChatInput('');
+  };
+
+  const handleJoinCall = (session) => {
+    logCallEvent({
+      memberName: session.memberName || currentMember.name,
+      advisor: session.advisor,
+      source: 'member-session-card'
+    });
+    window.alert(`Call request sent to ${session.advisor}. Advisor will see this in dashboard.`);
   };
 
   const handleCancelSession = (id) => {
@@ -221,8 +289,11 @@ const SessionBookingScreen = () => {
                       </div>
                    </div>
                    <div className="flex gap-3 relative z-10">
-                      <button className="flex-1 py-3 bg-[#2D1520] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:brightness-110 transition-all shadow-lg">
+                      <button onClick={() => handleJoinCall(session)} className="flex-1 py-3 bg-[#2D1520] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:brightness-110 transition-all shadow-lg">
                          Join Call
+                      </button>
+                      <button onClick={() => handleMemberChat(session)} className="px-4 py-3 bg-white border border-[#F5E6EA] text-[#ff69b4] rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-50 transition-all">
+                         Chat
                       </button>
                       <button onClick={() => handleCancelSession(session.id)}
                         className="p-3 bg-rose-50 text-[#ff69b4] rounded-xl hover:bg-rose-100 transition-all">
@@ -415,6 +486,86 @@ const SessionBookingScreen = () => {
           )}
         </AnimatePresence>
       </section>
+
+      {/* Quick Chat Modal */}
+      <AnimatePresence>
+        {chatModalSession && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed top-0 left-0 w-screen h-screen z-[80] bg-[#2D1520]/80 backdrop-blur-md flex items-start justify-center px-4 pt-36 pb-0 overflow-y-auto"
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 12 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 12 }}
+              className="w-full max-w-md bg-white rounded-[3rem] border border-[#F5E6EA] shadow-2xl overflow-hidden flex flex-col h-[620px]"
+            >
+              <div className="p-6 border-b border-[#F5E6EA] flex items-center justify-between bg-white">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-rose-100 flex items-center justify-center text-[#d17b88] font-black text-xl">
+                    {chatModalSession.advisor.split(' ').map((part) => part[0]).slice(0, 2).join('')}
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black text-[#2D1520]">{chatModalSession.advisor}</h3>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Online Now</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setChatModalSession(null)}
+                  className="w-10 h-10 rounded-full bg-rose-50 text-[#C4A0AC] hover:bg-rose-100 transition-all"
+                >
+                  <X size={16} className="mx-auto" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4 bg-[#FFF7F8]/30">
+                {chatMessages.length === 0 ? (
+                  <div className="p-4 rounded-2xl bg-white border border-[#F5E6EA] text-xs font-bold text-[#9A8A8E]">
+                    Start chat with your advisor.
+                  </div>
+                ) : (
+                  chatMessages.map((msg) => {
+                    const isMine = msg.senderType === 'member' || msg.sender === (chatModalSession.memberName || currentMember.name);
+                    const isSystem = msg.senderType === 'system';
+                    return (
+                      <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
+                        <div className={`max-w-[85%] p-4 rounded-[1.75rem] text-sm font-bold leading-relaxed ${
+                          isSystem ? 'bg-amber-50 border border-amber-100 text-[#7a5a1f]' : isMine ? 'bg-[#2D1520] text-white rounded-tr-none' : 'bg-white border border-[#F5E6EA] text-[#2D1520] rounded-tl-none'
+                        }`}>
+                          <p>{msg.text}</p>
+                          <p className={`text-[9px] mt-2 uppercase tracking-widest ${isMine ? 'text-white/40' : 'text-[#C4A0AC]'}`}>{msg.time}</p>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              <div className="p-6 border-t border-[#F5E6EA] bg-white">
+                <div className="flex gap-3">
+                  <input
+                    type="text"
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSendModalChat()}
+                    placeholder="Type your message..."
+                    className="flex-1 h-12 px-4 rounded-2xl border-2 border-[#F5E6EA] focus:border-[#ff69b4] outline-none text-sm font-bold bg-rose-50/30"
+                  />
+                  <button
+                    onClick={handleSendModalChat}
+                    disabled={!chatInput.trim()}
+                    className={`w-12 h-12 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${chatInput.trim() ? 'bg-[#ff69b4] text-white hover:brightness-110' : 'bg-rose-100 text-[#C4A0AC] cursor-not-allowed'}`}
+                  >
+                    →
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <style>{`.no-scrollbar::-webkit-scrollbar{display:none}.no-scrollbar{-ms-overflow-style:none;scrollbar-width:none}`}</style>
     </div>

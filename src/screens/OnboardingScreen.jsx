@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, ArrowLeft, Sparkles, Bell, Heart, Moon, Zap, Activity, ChevronUp, ChevronDown } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Sparkles, Heart, Moon, Zap, Activity } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const OnboardingScreen = () => {
   const [step, setStep] = useState(1);
   const [focus, setFocus] = useState([]);
-  const [time, setTime] = useState({ hour: '08', minute: '00', period: 'AM' });
   const navigate = useNavigate();
 
   const toggleFocus = (id) => {
@@ -14,7 +13,7 @@ const OnboardingScreen = () => {
   };
 
   const nextStep = () => {
-    if (step < 3) setStep(step + 1);
+    if (step < 2) setStep(step + 1);
     else navigate('/app');
   };
 
@@ -22,22 +21,9 @@ const OnboardingScreen = () => {
     if (step > 1) setStep(step - 1);
   };
 
-  const adjustTime = (field, direction) => {
-    setTime(prev => {
-      let val = parseInt(prev[field]);
-      if (field === 'hour') {
-        val = direction === 'up' ? (val % 12) + 1 : (val === 1 ? 12 : val - 1);
-      } else {
-        val = direction === 'up' ? (val + 5) % 60 : (val === 0 ? 55 : val - 5);
-      }
-      return { ...prev, [field]: val.toString().padStart(2, '0') };
-    });
-  };
-
   const stepImages = {
     1: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=800", // Welcoming Sakhi
-    2: "https://images.unsplash.com/photo-1490138139357-fc819d02e344?auto=format&fit=crop&q=80&w=800", // Peaceful Choice
-    3: "https://images.unsplash.com/photo-1512438248247-f0f2a5a8b7f0?auto=format&fit=crop&q=80&w=800"  // Serene Ritual
+    2: "https://images.unsplash.com/photo-1490138139357-fc819d02e344?auto=format&fit=crop&q=80&w=800" // Peaceful Choice
   };
 
   return (
@@ -75,12 +61,12 @@ const OnboardingScreen = () => {
         <div className="flex-1 max-w-md mx-4 md:mx-10">
           <div className="h-[2px] w-full bg-[#F5E6EA] rounded-full relative overflow-hidden">
             <motion.div 
-              animate={{ width: `${(step / 3) * 100}%` }}
+              animate={{ width: `${(step / 2) * 100}%` }}
               className="absolute top-0 left-0 h-full bg-[#ff69b4]"
             />
           </div>
           <div className="flex justify-between mt-2">
-            {[1, 2, 3].map(s => (
+            {[1, 2].map(s => (
               <span key={s} className={`text-[8px] md:text-[9px] font-black uppercase tracking-tighter ${step >= s ? 'text-[#ff69b4]' : 'text-[#C4A0AC]'}`}>Step 0{s}</span>
             ))}
           </div>
@@ -180,59 +166,6 @@ const OnboardingScreen = () => {
               </motion.div>
             )}
 
-            {step === 3 && (
-              <motion.div
-                key="step3"
-                initial={{ opacity: 0, x: -30 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 30 }}
-                className="space-y-8 md:space-y-10"
-              >
-                <div className="space-y-4">
-                  <div className="w-12 h-12 md:w-16 md:h-16 bg-white rounded-2xl flex items-center justify-center shadow-lg border border-rose-50 mb-2 md:mb-4">
-                    <Bell size={28} md:size={32} className="text-[#ff69b4]" />
-                  </div>
-                  <h2 className="text-3xl md:text-6xl font-black tracking-tighter leading-none">Ritual Time</h2>
-                  <p className="text-base md:text-lg text-[#9A8A8E] font-medium italic max-w-sm leading-relaxed">
-                    "Setting a dedicated time for your rituals ensures consistent healing."
-                  </p>
-                </div>
-
-                <div className="bg-white p-6 md:p-8 rounded-3xl md:rounded-[3rem] border-2 border-[#ff69b4]/20 shadow-2xl flex items-center justify-center gap-4 md:gap-8 max-w-fit">
-                   <div className="flex flex-col items-center gap-1 md:gap-2">
-                      <button onClick={() => adjustTime('hour', 'up')} className="text-[#C4A0AC] hover:text-[#ff69b4] transition-colors"><ChevronUp size={20} md:size={24}/></button>
-                      <span className="text-4xl md:text-6xl font-black tabular-nums leading-none">{time.hour}</span>
-                      <button onClick={() => adjustTime('hour', 'down')} className="text-[#C4A0AC] hover:text-[#ff69b4] transition-colors"><ChevronDown size={20} md:size={24}/></button>
-                   </div>
-                   <span className="text-3xl md:text-4xl font-black text-[#ff69b4] mt-2 md:mt-4">:</span>
-                   <div className="flex flex-col items-center gap-1 md:gap-2">
-                      <button onClick={() => adjustTime('minute', 'up')} className="text-[#C4A0AC] hover:text-[#ff69b4] transition-colors"><ChevronUp size={20} md:size={24}/></button>
-                      <span className="text-4xl md:text-6xl font-black tabular-nums leading-none">{time.minute}</span>
-                      <button onClick={() => adjustTime('minute', 'down')} className="text-[#C4A0AC] hover:text-[#ff69b4] transition-colors"><ChevronDown size={20} md:size={24}/></button>
-                   </div>
-                   <div className="flex flex-col gap-2 ml-2 md:ml-4">
-                      {['AM', 'PM'].map(p => (
-                        <button 
-                          key={p}
-                          onClick={() => setTime(t => ({ ...t, period: p }))}
-                          className={`px-3 md:px-5 py-1.5 md:py-2 rounded-lg md:rounded-xl text-[8px] md:text-[9px] font-black uppercase tracking-widest border-2 transition-all ${
-                            time.period === p ? 'bg-[#2D1520] text-white border-[#2D1520]' : 'bg-transparent text-[#C4A0AC] border-[#F5E6EA]'
-                          }`}
-                        >
-                          {p}
-                        </button>
-                      ))}
-                   </div>
-                </div>
-
-                <button 
-                  onClick={nextStep}
-                  className="w-full md:w-fit px-10 md:px-16 py-5 md:py-6 bg-[#2D1520] text-white rounded-full font-black uppercase tracking-[0.2em] shadow-2xl flex items-center justify-center gap-4 text-[10px] md:text-xs"
-                >
-                  Enter Sanctuary <ArrowRight size={18} md:size={20} />
-                </button>
-              </motion.div>
-            )}
           </AnimatePresence>
         </section>
 
@@ -256,9 +189,7 @@ const OnboardingScreen = () => {
               <div className="absolute bottom-12 left-12 right-12 text-white">
                  <p className="text-[10px] font-black uppercase tracking-[0.4em] opacity-80 mb-2">HealthSakhi Philosophy</p>
                  <h3 className="text-3xl font-bold leading-tight">
-                    {step === 1 ? "Your healing is a journey, not a destination." : 
-                     step === 2 ? "Balance is the key to every kingdom." : 
-                     "Consistency is your greatest superpower."}
+                    {step === 1 ? "Your healing is a journey, not a destination." : "Balance is the key to every kingdom."}
                  </h3>
               </div>
             </motion.div>

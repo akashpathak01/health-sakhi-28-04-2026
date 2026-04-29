@@ -33,6 +33,8 @@ import OnboardingScreen from './screens/OnboardingScreen';
 import PeriodTrackerScreen from './screens/app/PeriodTrackerScreen';
 import CommunityScreen from './screens/app/CommunityScreen';
 import RewardsScreen from './screens/app/RewardsScreen';
+import SubscriptionPlansScreen from './screens/app/SubscriptionPlansScreen';
+import ReceiptsScreen from './screens/app/ReceiptsScreen';
 
 // Advisor Screens
 import AdvisorDash from './screens/advisor/AdvisorDashboard';
@@ -99,6 +101,8 @@ const App = () => {
         <Route path="period" element={<PeriodTrackerScreen />} />
         <Route path="community" element={<CommunityScreen />} />
         <Route path="rewards" element={<RewardsScreen />} />
+        <Route path="plans" element={<SubscriptionPlansScreen />} />
+        <Route path="receipts" element={<ReceiptsScreen />} />
       </Route>
 
       {/* ── 🧑‍⚕️ Advisor Dashboard ── */}

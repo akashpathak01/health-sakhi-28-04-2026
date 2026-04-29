@@ -2,9 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users, Heart, MessageSquare, ShieldCheck, Sparkles, ArrowRight, Star, Clock, X, Calendar, MapPin, ChevronRight, Brain, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { appendAdvisorMessage, getAdvisorThreads, getCurrentMemberProfile, markThreadRead, upsertAdvisorThread } from '../../data/advisorFlow';
 
 // ── Doctor Profile Modal ─────────────────────────────────────────────────────
-const DoctorModal = ({ onClose, onBook, onChat }) => (
+const DoctorModal = ({ onClose, onBook, onChat, advisorName }) => (
   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
     className="fixed inset-0 z-50 flex items-center justify-center bg-[#2D1520]/70 backdrop-blur-md p-4">
     <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
@@ -14,11 +15,11 @@ const DoctorModal = ({ onClose, onBook, onChat }) => (
         <X size={18} />
       </button>
       <div className="flex items-center gap-6 mb-8">
-        <img src="https://ui-avatars.com/api/?name=Dr+Aditi+Rao&background=D17B88&color=fff&size=200"
-          alt="Dr. Aditi Rao" className="w-20 h-20 rounded-[1.5rem] object-cover shadow-lg border-4 border-white" />
+        <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(advisorName)}&background=D17B88&color=fff&size=200`}
+          alt={advisorName} className="w-20 h-20 rounded-[1.5rem] object-cover shadow-lg border-4 border-white" />
         <div>
           <p className="text-[10px] font-black uppercase tracking-widest text-[#ff69b4]">Lead Consultant</p>
-          <h3 className="text-2xl font-black text-[#2D1520]">Dr. Aditi Rao</h3>
+          <h3 className="text-2xl font-black text-[#2D1520]">{advisorName}</h3>
           <div className="flex gap-0.5 text-amber-400 mt-1">
             {[1,2,3,4,5].map(i => <Star key={i} size={10} fill="currentColor" />)}
           </div>
@@ -52,48 +53,51 @@ const DoctorModal = ({ onClose, onBook, onChat }) => (
 );
 
 // ── Private Message Modal (Two-Way Thread Simulation) ──────────────────────
-const ExpertMessageModal = ({ onClose }) => {
-  const STORAGE_KEY = 'hs_expert_chats_dr_aditi';
-  const [messages, setMessages] = useState(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-      return saved || [
-        { id: 1, text: "Hello! I'm Dr. Aditi. How can I help you today?", sender: 'doctor', time: 'System' }
-      ];
-    } catch { return []; }
-  });
+const ExpertMessageModal = ({ onClose, advisorName }) => {
+  const currentMember = getCurrentMemberProfile();
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
+  const [threadId, setThreadId] = useState(null);
   const scrollRef = useRef(null);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+    const thread = upsertAdvisorThread({
+      memberName: currentMember.name,
+      memberEmail: currentMember.email,
+      advisor: advisorName
+    });
+    setThreadId(thread.id);
+    setMessages(thread.messages || []);
+    markThreadRead(thread.id);
+
+    const sync = () => {
+      const threads = getAdvisorThreads();
+      const latest = threads.find((t) => t.id === thread.id);
+      if (latest) setMessages(latest.messages || []);
+    };
+    window.addEventListener('storage', sync);
+    return () => window.removeEventListener('storage', sync);
+  }, []);
+
+  useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   const handleSend = () => {
-    if (!input.trim()) return;
-    const userMsg = { id: Date.now(), text: input, sender: 'user', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) };
-    setMessages(prev => [...prev, userMsg]);
+    if (!input.trim() || !threadId) return;
+    const updated = appendAdvisorMessage({
+      threadId,
+      senderType: 'member',
+      senderName: currentMember.name,
+      text: input.trim()
+    });
+    if (updated) setMessages(updated.messages || []);
     setInput('');
-
-    // Simulate Doctor Reply
-    setIsTyping(true);
-    setTimeout(() => {
-      setIsTyping(false);
-      const doctorMsg = { 
-        id: Date.now() + 1, 
-        text: "Thank you for sharing this. I've received your message and will review it carefully. Would you like to book a quick 15-min session to discuss this further?", 
-        sender: 'doctor', 
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
-      };
-      setMessages(prev => [...prev, doctorMsg]);
-    }, 3000);
   };
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-[#2D1520]/80 backdrop-blur-md p-4">
+      className="fixed inset-0 z-[60] flex items-start justify-center bg-[#2D1520]/80 backdrop-blur-md px-4 pt-36 pb-6 overflow-y-auto">
       <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
         className="bg-white rounded-[3rem] w-full max-w-md h-[600px] shadow-2xl relative overflow-hidden flex flex-col">
         
@@ -101,12 +105,11 @@ const ExpertMessageModal = ({ onClose }) => {
         <div className="p-8 border-b border-rose-50 flex items-center justify-between bg-white sticky top-0 z-10">
           <div className="flex items-center gap-4">
             <div className="relative">
-              <img src="https://ui-avatars.com/api/?name=Dr+Aditi+Rao&background=D17B88&color=fff&size=100" 
+              <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(advisorName)}&background=D17B88&color=fff&size=100`} 
                 className="w-12 h-12 rounded-2xl object-cover border-2 border-rose-100" alt="" />
-              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-white rounded-full" />
             </div>
             <div>
-              <h3 className="text-lg font-black text-[#2D1520] leading-tight">Dr. Aditi Rao</h3>
+              <h3 className="text-lg font-black text-[#2D1520] leading-tight">{advisorName}</h3>
               <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">Online Now</p>
             </div>
           </div>
@@ -117,30 +120,27 @@ const ExpertMessageModal = ({ onClose }) => {
 
         {/* Chat Body */}
         <div className="flex-1 overflow-y-auto p-8 space-y-6 no-scrollbar bg-[#FFF7F8]/30">
-          {messages.map((m) => (
-            <motion.div key={m.id} initial={{ opacity: 0, x: m.sender === 'user' ? 20 : -20 }} animate={{ opacity: 1, x: 0 }}
-              className={`flex ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+          {messages.map((m) => {
+            const isMemberMessage = m.senderType === 'member' || m.sender === currentMember.name;
+            const isSystemMessage = m.senderType === 'system';
+            return (
+            <motion.div key={m.id} initial={{ opacity: 0, x: isMemberMessage ? 20 : -20 }} animate={{ opacity: 1, x: 0 }}
+              className={`flex ${isMemberMessage ? 'justify-end' : 'justify-start'}`}>
               <div className={`max-w-[85%] p-5 rounded-[2rem] text-sm font-medium leading-relaxed shadow-sm ${
-                m.sender === 'user' 
+                isSystemMessage
+                  ? 'bg-amber-50 text-[#7a5a1f] border border-amber-100'
+                  : isMemberMessage
                   ? 'bg-[#2D1520] text-white rounded-tr-none' 
                   : 'bg-white text-[#2D1520] border border-rose-50 rounded-tl-none'
               }`}>
                 {m.text}
-                <p className={`text-[9px] mt-2 font-bold uppercase tracking-widest ${m.sender === 'user' ? 'text-white/40' : 'text-[#C4A0AC]'}`}>
+                <p className={`text-[9px] mt-2 font-bold uppercase tracking-widest ${isMemberMessage ? 'text-white/40' : 'text-[#C4A0AC]'}`}>
                   {m.time}
                 </p>
               </div>
             </motion.div>
-          ))}
-          {isTyping && (
-            <div className="flex justify-start">
-              <div className="bg-white p-4 rounded-[1.5rem] rounded-tl-none border border-rose-50 flex gap-1">
-                <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1 }} className="w-1.5 h-1.5 bg-[#ff69b4] rounded-full" />
-                <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1, delay: 0.2 }} className="w-1.5 h-1.5 bg-[#ff69b4] rounded-full" />
-                <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1, delay: 0.4 }} className="w-1.5 h-1.5 bg-[#ff69b4] rounded-full" />
-              </div>
-            </div>
-          )}
+            );
+          })}
           <div ref={scrollRef} />
         </div>
 
@@ -203,10 +203,41 @@ const EventModal = ({ event, onClose, onRegister }) => (
 // ── Main Screen ──────────────────────────────────────────────────────────────
 const RelationshipScreen = () => {
   const navigate = useNavigate();
+  const currentMember = getCurrentMemberProfile();
   const [showDoctorModal, setShowDoctorModal] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [registeredEvents, setRegisteredEvents] = useState([]);
+  const [activeAdvisor, setActiveAdvisor] = useState('Dr. Sakshi Sharma');
+
+  useEffect(() => {
+    const syncAdvisor = () => {
+      try {
+        const sessions = JSON.parse(localStorage.getItem('hs_booked_sessions') || '[]');
+        const latestMemberSession = sessions.find(
+          (session) => (session.memberEmail || '').toLowerCase() === currentMember.email.toLowerCase()
+        );
+        if (latestMemberSession?.advisor) {
+          setActiveAdvisor(latestMemberSession.advisor);
+          return;
+        }
+      } catch (error) {
+        // ignore and fallback
+      }
+
+      const threads = getAdvisorThreads();
+      const memberThread = threads.find((thread) => thread.memberEmail?.toLowerCase() === currentMember.email.toLowerCase());
+      if (memberThread?.advisor) {
+        setActiveAdvisor(memberThread.advisor);
+      }
+    };
+
+    syncAdvisor();
+    window.addEventListener('storage', syncAdvisor);
+    return () => window.removeEventListener('storage', syncAdvisor);
+  }, [currentMember.email]);
+
+  const advisorAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(activeAdvisor)}&background=D17B88&color=fff&size=200`;
 
   const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.1 } } };
   const item = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0, transition: { duration: 0.5 } } };
@@ -235,13 +266,14 @@ const RelationshipScreen = () => {
       <AnimatePresence>
         {showDoctorModal && (
           <DoctorModal
+            advisorName={activeAdvisor}
             onClose={() => setShowDoctorModal(false)}
             onBook={() => { setShowDoctorModal(false); navigate('/app/sessions'); }}
             onChat={() => { setShowDoctorModal(false); setShowChat(true); }}
           />
         )}
         {showChat && (
-          <ExpertMessageModal onClose={() => setShowChat(false)} />
+          <ExpertMessageModal advisorName={activeAdvisor} onClose={() => setShowChat(false)} />
         )}
         {selectedEvent && (
           <EventModal
@@ -277,8 +309,8 @@ const RelationshipScreen = () => {
             <div className="relative z-10 flex flex-col md:flex-row items-center gap-10">
               <div className="w-40 h-40 rounded-[3rem] overflow-hidden shadow-2xl border-4 border-white shrink-0">
                 <img
-                  src="https://ui-avatars.com/api/?name=Dr+Aditi+Rao&background=D17B88&color=fff&size=200"
-                  alt="Dr. Aditi Rao"
+                  src={advisorAvatar}
+                  alt={activeAdvisor}
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -289,9 +321,9 @@ const RelationshipScreen = () => {
                     {[1,2,3,4,5].map(i => <Star key={i} size={10} fill="currentColor" />)}
                   </div>
                 </div>
-                <h3 className="text-3xl font-black mb-4 tracking-tight text-[#2D1520]">Dr. Aditi Rao</h3>
+                <h3 className="text-3xl font-black mb-4 tracking-tight text-[#2D1520]">{activeAdvisor}</h3>
                 <p className="text-sm text-[#6B5E63] mb-6 max-w-md font-medium leading-relaxed">
-                  Specializing in emotional boundaries, intimacy healing, and self-love. Let's work together to build the relationships you deserve.
+                  Your currently booked advisor for support sessions. Continue your conversation and follow-up directly from here.
                 </p>
                 <div className="flex gap-4 flex-wrap">
                   <motion.button

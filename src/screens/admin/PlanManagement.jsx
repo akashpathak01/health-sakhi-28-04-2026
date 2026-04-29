@@ -1,13 +1,20 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ShieldCheck, Plus, Search, Edit2, Trash2, Check, Package, X, ChevronDown, Eye } from 'lucide-react';
+import { defaultPlans, PLAN_STORAGE_KEY } from '../../data/planCatalog';
+import { APPROVED_MEMBERS_KEY, PENDING_SIGNUPS_KEY, readJsonArray, writeJsonArray } from '../../data/memberOnboarding';
 
 const PlanManagement = () => {
-   const [plans, setPlans] = useState([
-      { id: 'PLN-01', name: 'Free Sakhi', price: '0', duration: 'Lifetime', status: 'Active', members: 1240 },
-      { id: 'PLN-02', name: 'Premium Pro', price: '1799', duration: '12 Months', status: 'Active', members: 342 },
-      { id: 'PLN-03', name: 'Advisor Connect+', price: '2499', duration: '12 Months', status: 'Inactive', members: 0 },
-   ]);
+   const [plans, setPlans] = useState(() => {
+      const saved = localStorage.getItem(PLAN_STORAGE_KEY);
+      if (!saved) return defaultPlans;
+      try {
+         const parsed = JSON.parse(saved);
+         return Array.isArray(parsed) && parsed.length > 0 ? parsed : defaultPlans;
+      } catch (error) {
+         return defaultPlans;
+      }
+   });
    const [isCreating, setIsCreating] = useState(false);
    const [isEditing, setIsEditing] = useState(false);
    const [isDeleting, setIsDeleting] = useState(false);
@@ -17,14 +24,37 @@ const PlanManagement = () => {
    const [activeTab, setActiveTab] = useState('Plans');
    const [openDropdown, setOpenDropdown] = useState(null);
    
-   const [requests, setRequests] = useState([
-      { id: 'REQ-01', user: 'Anjali Sharma', email: 'anjali.s@gmail.com', phone: '+91 98765 43210', plan: 'Premium Pro', date: 'Oct 14, 2024', status: 'Pending' },
-      { id: 'REQ-02', user: 'Priya Patel', email: 'priya.p@yahoo.com', phone: '+91 91234 56789', plan: 'Wellness Plus', date: 'Oct 13, 2024', status: 'Accepted' },
-      { id: 'REQ-03', user: 'Neha Gupta', email: 'neha.gupta@outlook.com', phone: '+91 99887 76655', plan: 'Advisor Connect+', date: 'Oct 13, 2024', status: 'Rejected' },
-   ]);
+   const [requests, setRequests] = useState(() => readJsonArray(PENDING_SIGNUPS_KEY));
 
    const handleRequestAction = (id, action) => {
-      setRequests(requests.map(req => req.id === id ? { ...req, status: action } : req));
+      const currentRequests = readJsonArray(PENDING_SIGNUPS_KEY);
+      const selectedRequest = currentRequests.find((req) => req.id === id);
+      if (!selectedRequest) return;
+
+      if (action === 'Accepted') {
+         const approvedUsers = readJsonArray(APPROVED_MEMBERS_KEY);
+         const exists = approvedUsers.some((user) => user.email.toLowerCase() === selectedRequest.email.toLowerCase());
+
+         if (!exists) {
+            const newUser = {
+               id: Date.now(),
+               name: selectedRequest.user,
+               email: selectedRequest.email,
+               phone: selectedRequest.phone,
+               password: selectedRequest.password || 'member123',
+               plan: selectedRequest.plan,
+               status: 'Active',
+               role: 'Member',
+               progress: 0,
+               active: 'Just approved'
+            };
+            writeJsonArray(APPROVED_MEMBERS_KEY, [newUser, ...approvedUsers]);
+         }
+      }
+
+      const updatedRequests = currentRequests.filter((req) => req.id !== id);
+      writeJsonArray(PENDING_SIGNUPS_KEY, updatedRequests);
+      setRequests(updatedRequests);
    };
 
    const [formData, setFormData] = useState({
@@ -37,6 +67,17 @@ const PlanManagement = () => {
       advisorSessions: '',
       aiSakhiChat: false
    });
+
+   useEffect(() => {
+      localStorage.setItem(PLAN_STORAGE_KEY, JSON.stringify(plans));
+   }, [plans]);
+
+   useEffect(() => {
+      const syncRequests = () => setRequests(readJsonArray(PENDING_SIGNUPS_KEY));
+      syncRequests();
+      window.addEventListener('storage', syncRequests);
+      return () => window.removeEventListener('storage', syncRequests);
+   }, []);
 
    const openCreateModal = () => {
       setFormData({ name: '', price: '', duration: '1 Month', status: 'Active', videos: '', books: '', advisorSessions: '', aiSakhiChat: false });
@@ -68,7 +109,7 @@ const PlanManagement = () => {
       e.preventDefault();
          if (isCreating) {
             const newPlan = {
-               id: `PLN-0${plans.length + 1}`,
+               id: `PLN-${String(plans.length + 1).padStart(2, '0')}`,
                name: formData.name,
                price: formData.price,
                duration: formData.duration,
@@ -77,6 +118,13 @@ const PlanManagement = () => {
                books: formData.books,
                advisorSessions: formData.advisorSessions,
                aiSakhiChat: formData.aiSakhiChat,
+               shortDescription: `${formData.name} for guided healing and structured progress.`,
+               features: [
+                  `${formData.videos || 'Limited'} videos access`,
+                  `${formData.books || 'Limited'} books in library`,
+                  `${formData.advisorSessions || '0/month'} advisor support`,
+                  formData.aiSakhiChat ? 'AI Sakhi chat enabled' : 'AI Sakhi chat disabled'
+               ],
                members: 0
             };
             setPlans([newPlan, ...plans]);
@@ -305,7 +353,7 @@ const PlanManagement = () => {
                               </td>
                               <td className="px-6 py-4 font-bold text-slate-600">{plan.members.toLocaleString()}</td>
                               <td className="px-6 py-4">
-                                 <div className="flex items-center justify-end gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-all duration-300">
+                                 <div className="flex items-center justify-end gap-2 transition-all duration-300">
                                     <button onClick={() => openViewModal(plan)} className="w-8 h-8 flex items-center justify-center bg-white text-slate-400 hover:text-sky-500 hover:bg-sky-50 rounded-lg transition-all shadow-sm border border-black/5" title="View Plan"><Eye size={14} strokeWidth={2.5} /></button>
                                     <button onClick={() => openEditModal(plan)} className="w-8 h-8 flex items-center justify-center bg-white text-slate-400 hover:text-[#ff69b4] hover:bg-[#ff69b4]/10 rounded-lg transition-all shadow-sm border border-black/5" title="Edit Plan"><Edit2 size={14} /></button>
                                     <button onClick={() => openDeleteModal(plan)} className="w-8 h-8 flex items-center justify-center bg-white text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all shadow-sm border border-black/5" title="Delete Plan"><Trash2 size={14} /></button>
@@ -329,7 +377,7 @@ const PlanManagement = () => {
          {activeTab === 'Requests' && (
             <div className="bg-white rounded-[2rem] border border-black/5 shadow-sm overflow-hidden animate-in fade-in zoom-in-95 duration-300">
                <div className="p-6 border-b border-black/5 flex items-center justify-between bg-slate-50/50">
-                  <h2 className="text-sm font-black text-slate-800 tracking-tight">Recent Buy Requests</h2>
+                  <h2 className="text-sm font-black text-slate-800 tracking-tight">Pending Member Signup Requests</h2>
                   <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total: {requests.length} Requests</span>
                </div>
                <div className="overflow-x-auto">

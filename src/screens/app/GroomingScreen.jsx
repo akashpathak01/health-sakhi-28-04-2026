@@ -1,44 +1,61 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Scissors, Star, Heart, Sparkles, ArrowRight, Play, CheckCircle2, ShoppingBag, X, Clock, ShieldCheck, Zap, BookOpen } from 'lucide-react';
 
 // ── Video Player Modal ──────────────────────────────────────────────────────
-const VideoModal = ({ video, onClose }) => (
-  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-    className="fixed inset-0 z-[60] flex items-center justify-center bg-[#2D1520]/90 backdrop-blur-xl p-4 md:p-12">
-    <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
-      className="w-full max-w-5xl bg-white rounded-[3rem] overflow-hidden shadow-2xl flex flex-col md:flex-row h-[80vh]">
-      <div className="flex-1 bg-black relative flex items-center justify-center">
-        <video autoPlay controls className="w-full h-full object-contain">
-          <source src="https://vjs.zencdn.net/v/oceans.mp4" type="video/mp4" />
-        </video>
-        <button onClick={onClose} className="absolute top-6 right-6 w-12 h-12 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/20 transition-all">
-          <X size={24} />
+const VideoModal = ({ video, onClose }) => {
+  const videoRef = useRef(null);
+
+  const handleFullscreen = () => {
+    if (!videoRef.current) return;
+    if (videoRef.current.requestFullscreen) {
+      videoRef.current.requestFullscreen();
+    }
+  };
+
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[80] flex items-start justify-center bg-[#2D1520]/90 backdrop-blur-xl px-3 pb-6 pt-32 md:px-8 md:pb-10 md:pt-36 overflow-y-auto">
+      <motion.div initial={{ scale: 0.96, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.96, y: 20 }}
+        className="relative w-full max-w-6xl bg-white rounded-[2rem] md:rounded-[3rem] overflow-hidden shadow-2xl flex flex-col lg:flex-row lg:gap-3 max-h-[calc(100vh-7.5rem)]">
+        <button onClick={onClose} aria-label="Close video modal"
+          className="absolute top-5 right-5 z-20 w-10 h-10 rounded-full bg-white/85 border border-rose-100 flex items-center justify-center text-[#2D1520] hover:bg-white transition-all shadow-md">
+          <X size={20} />
         </button>
-      </div>
-      <div className="w-full md:w-80 p-10 flex flex-col justify-between border-l border-rose-50">
-        <div className="space-y-6">
-          <span className="px-3 py-1 bg-rose-50 text-[#ff69b4] rounded-lg text-[9px] font-black uppercase tracking-widest">{video.type || 'Tutorial'}</span>
-          <h3 className="text-2xl font-black text-[#2D1520] leading-tight">{video.title}</h3>
-          <p className="text-xs font-medium text-[#9A8A8E] leading-relaxed">
-            Sakhi, this minimalist routine is perfect for busy mornings. Focus on fresh skin and confident vibes.
-          </p>
-          <div className="space-y-3">
-             <div className="flex items-center gap-3 text-[10px] font-bold text-[#C4A0AC] uppercase tracking-widest">
+        <div className="flex-1 bg-black relative flex items-center justify-center min-h-[260px] md:min-h-[420px]">
+          <video ref={videoRef} autoPlay controls className="w-full h-full object-contain">
+            <source src="/Videos/grooming-tutorial.mp4" type="video/mp4" />
+          </video>
+        </div>
+        <div className="w-full lg:w-80 p-6 pt-9 md:p-8 md:pt-12 flex flex-col border-t lg:border-t-0 lg:border-l-0 gap-6">
+          <div className="space-y-6 mt-2 md:mt-4">
+            <span className="px-3 py-1 bg-rose-50 text-[#ff69b4] rounded-lg text-[9px] font-black uppercase tracking-widest">{video.type || 'Tutorial'}</span>
+            <h3 className="text-2xl font-black text-[#2D1520] leading-tight">{video.title}</h3>
+            <p className="text-xs font-medium text-[#9A8A8E] leading-relaxed">
+              Sakhi, this minimalist routine is perfect for busy mornings. Focus on fresh skin and confident vibes.
+            </p>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 text-[10px] font-bold text-[#C4A0AC] uppercase tracking-widest">
                 <Clock size={14} /> 5 Minute Session
-             </div>
-             <div className="flex items-center gap-3 text-[10px] font-bold text-[#ff69b4] uppercase tracking-widest">
+              </div>
+              <div className="flex items-center gap-3 text-[10px] font-bold text-[#ff69b4] uppercase tracking-widest">
                 <Sparkles size={14} /> +20 Glow Points
-             </div>
+              </div>
+            </div>
+          </div>
+          <div className="space-y-3 mt-auto pb-2 md:pb-3">
+            <button onClick={handleFullscreen} className="w-full py-3 border border-rose-200 text-[#2D1520] rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-50 transition-all">
+              Open Fullscreen
+            </button>
+            <button onClick={onClose} className="w-full py-4 bg-[#2D1520] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all">
+              Complete Tutorial
+            </button>
           </div>
         </div>
-        <button onClick={onClose} className="w-full py-4 bg-[#2D1520] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all">
-          Complete Tutorial
-        </button>
-      </div>
+      </motion.div>
     </motion.div>
-  </motion.div>
-);
+  );
+};
 
 // ── Routine Detail Modal ────────────────────────────────────────────────────
 const RoutineModal = ({ routine, onClose, onComplete }) => (
@@ -80,26 +97,42 @@ const RoutineModal = ({ routine, onClose, onComplete }) => (
 );
 
 // ── Guide Content Modal ─────────────────────────────────────────────────────
-const GuideModal = ({ guide, onClose }) => (
-  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-    className="fixed inset-0 z-[60] flex items-center justify-center bg-[#2D1520]/90 backdrop-blur-md p-4">
-    <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
-      className="w-full max-w-2xl bg-white rounded-[3rem] overflow-hidden shadow-2xl relative flex flex-col max-h-[85vh]">
-      <div className="p-8 md:p-12 overflow-y-auto custom-scrollbar">
-        <button onClick={onClose} className="absolute top-8 right-8 text-[#C4A0AC] hover:text-[#ff69b4] transition-colors">
-          <X size={24} />
+const GuideModal = ({ guide, onClose }) => {
+  const guideVideoRef = useRef(null);
+
+  const handleGuideFullscreen = () => {
+    if (!guideVideoRef.current) return;
+    if (guideVideoRef.current.requestFullscreen) {
+      guideVideoRef.current.requestFullscreen();
+    }
+  };
+
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[80] flex items-start justify-center bg-[#2D1520]/90 backdrop-blur-md px-3 pb-6 pt-28 md:px-6 md:pb-10 md:pt-32 overflow-y-auto">
+      <motion.div initial={{ scale: 0.96, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.96, y: 20 }}
+        className="w-full max-w-3xl bg-white rounded-[2rem] md:rounded-[3rem] overflow-hidden shadow-2xl relative flex flex-col max-h-[calc(100vh-7.5rem)]">
+        <button onClick={onClose} aria-label="Close guide modal"
+          className="absolute top-5 right-5 z-10 w-10 h-10 rounded-full bg-white border border-rose-100 text-[#C4A0AC] hover:text-[#ff69b4] transition-colors shadow-md flex items-center justify-center">
+          <X size={20} />
         </button>
-        <span className="text-[10px] font-black uppercase tracking-widest text-[#ff69b4] mb-4 block">{guide.type}</span>
-        <h3 className="text-3xl font-black text-[#2D1520] mb-8 leading-tight">{guide.title}</h3>
-        
-        {guide.type === 'Video' ? (
-           <div className="aspect-video bg-black rounded-3xl overflow-hidden mb-8">
-              <video autoPlay controls className="w-full h-full object-cover">
-                <source src="https://vjs.zencdn.net/v/oceans.mp4" type="video/mp4" />
-              </video>
-           </div>
-        ) : (
-           <div className="space-y-6 text-[#6B5E63] text-sm font-medium leading-relaxed">
+        <div className="p-6 md:p-10 overflow-y-auto custom-scrollbar">
+          <span className="text-[10px] font-black uppercase tracking-widest text-[#ff69b4] mb-4 block">{guide.type}</span>
+          <h3 className="text-3xl font-black text-[#2D1520] mb-8 leading-tight pr-10">{guide.title}</h3>
+          
+          {guide.type === 'Video' ? (
+            <div className="space-y-4">
+              <div className="aspect-video bg-black rounded-3xl overflow-hidden mb-2">
+                <video ref={guideVideoRef} autoPlay controls className="w-full h-full object-contain">
+                  <source src="/Videos/grooming-tutorial.mp4" type="video/mp4" />
+                </video>
+              </div>
+              <button onClick={handleGuideFullscreen} className="px-5 py-2.5 border border-rose-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-[#2D1520] hover:bg-rose-50 transition-all">
+                Open Fullscreen
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-6 text-[#6B5E63] text-sm font-medium leading-relaxed">
               <p>Choosing a signature scent is like finding your second skin, Sakhi. It's an extension of your personality that lingers long after you leave the room.</p>
               <h4 className="font-black text-[#2D1520] text-lg mt-8">The Base Notes</h4>
               <p>Start by understanding the fragrance families. Floral, Woody, Oriental, or Fresh? Your mood often dictates what works best.</p>
@@ -107,20 +140,21 @@ const GuideModal = ({ guide, onClose }) => (
                 "Fragrance is the first garment we put on our skin." — Dr. Aditi Rao
               </div>
               <p>Always test on your pulse points and wait for 20 minutes to let the heart notes emerge before making a decision.</p>
-           </div>
-        )}
-      </div>
-      <div className="p-8 bg-rose-50/50 border-t border-rose-100 flex justify-between items-center">
-         <div className="flex items-center gap-2 text-[10px] font-black text-[#C4A0AC] uppercase">
+            </div>
+          )}
+        </div>
+        <div className="p-6 md:p-8 bg-rose-50/50 border-t border-rose-100 flex justify-between items-center gap-3">
+          <div className="flex items-center gap-2 text-[10px] font-black text-[#C4A0AC] uppercase">
             <BookOpen size={14} /> 4 Min Read
-         </div>
-         <button onClick={onClose} className="px-8 py-3 bg-[#2D1520] text-white rounded-xl text-[10px] font-black uppercase tracking-widest">
+          </div>
+          <button onClick={onClose} className="px-8 py-3 bg-[#2D1520] text-white rounded-xl text-[10px] font-black uppercase tracking-widest">
             Close Guide
-         </button>
-      </div>
+          </button>
+        </div>
+      </motion.div>
     </motion.div>
-  </motion.div>
-);
+  );
+};
 
 // ── Kit Recommendation Modal ───────────────────────────────────────────────
 const KitModal = ({ onClose }) => (
