@@ -2,6 +2,8 @@ import React, { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Scissors, Star, Heart, Sparkles, ArrowRight, Play, CheckCircle2, ShoppingBag, X, Clock, ShieldCheck, Zap, BookOpen } from 'lucide-react';
 
+const GROOMING_TUTORIAL_VIDEO_URL = 'https://ik.imagekit.io/1e6dbfyxy/Zero-Cost%20Skincare%20Hacks%20For%20Glowing%20Skin%20%20DIY%20Beauty%20Secrets%20from%20Your%20Kitchen%20%20BebeautifulIn%20-%20BeBeautiful%20(1080p,%20h264).mp4';
+
 // ── Video Player Modal ──────────────────────────────────────────────────────
 const VideoModal = ({ video, onClose }) => {
   const videoRef = useRef(null);
@@ -24,7 +26,7 @@ const VideoModal = ({ video, onClose }) => {
         </button>
         <div className="flex-1 bg-black relative flex items-center justify-center min-h-[260px] md:min-h-[420px]">
           <video ref={videoRef} autoPlay controls className="w-full h-full object-contain">
-            <source src="/Videos/grooming-tutorial.mp4" type="video/mp4" />
+            <source src={GROOMING_TUTORIAL_VIDEO_URL} type="video/mp4" />
           </video>
         </div>
         <div className="w-full lg:w-80 p-6 pt-9 md:p-8 md:pt-12 flex flex-col border-t lg:border-t-0 lg:border-l-0 gap-6">
@@ -124,7 +126,7 @@ const GuideModal = ({ guide, onClose }) => {
             <div className="space-y-4">
               <div className="aspect-video bg-black rounded-3xl overflow-hidden mb-2">
                 <video ref={guideVideoRef} autoPlay controls className="w-full h-full object-contain">
-                  <source src="/Videos/grooming-tutorial.mp4" type="video/mp4" />
+                  <source src={GROOMING_TUTORIAL_VIDEO_URL} type="video/mp4" />
                 </video>
               </div>
               <button onClick={handleGuideFullscreen} className="px-5 py-2.5 border border-rose-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-[#2D1520] hover:bg-rose-50 transition-all">
