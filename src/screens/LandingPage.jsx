@@ -64,7 +64,14 @@ const LandingPage = () => {
   };
 
   const [isPlayingDemo, setIsPlayingDemo] = useState(true);
+  const [isPlayingPoem, setIsPlayingPoem] = useState(false);
+  const [poemVideoMissing, setPoemVideoMissing] = useState(false);
   const [pricingPlans, setPricingPlans] = useState(defaultPlans);
+
+  const scrollToSection = (id) => {
+    const target = document.getElementById(id);
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   useEffect(() => {
     const savedPlans = localStorage.getItem(PLAN_STORAGE_KEY);
@@ -80,14 +87,96 @@ const LandingPage = () => {
   }, []);
 
   return (
-    <div className="w-full overflow-x-hidden" style={{ background: 'linear-gradient(135deg, rgb(252, 228, 236) 0%, rgb(237, 231, 246) 50%, rgb(255, 243, 224) 100%)' }}>
+    <div className="w-full overflow-x-hidden" style={{ background: 'linear-gradient(135deg, rgb(255, 232, 245) 0%, rgb(236, 245, 255) 50%, rgb(255, 242, 214) 100%)' }}>
       <style>{`
         .glass-card { background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.8); }
-        .hero-gradient { background: linear-gradient(135deg, rgb(252, 228, 236) 0%, rgb(237, 231, 246) 50%, rgb(255, 243, 224) 100%); }
+        .hero-gradient { background: linear-gradient(135deg, rgb(255, 216, 236) 0%, rgb(236, 222, 255) 35%, rgb(211, 236, 255) 68%, rgb(255, 230, 186) 100%); }
+        .lotus-petal {
+          position: absolute;
+          top: -80px;
+          border-radius: 60% 40% 65% 35%;
+          filter: drop-shadow(0 4px 10px rgba(255, 131, 190, 0.25));
+          animation-name: petals-fall;
+          animation-timing-function: linear;
+          animation-iteration-count: infinite;
+          will-change: transform, opacity;
+          pointer-events: none;
+        }
+        .lotus-petal.layer-back {
+          filter: blur(0.4px) drop-shadow(0 2px 8px rgba(157, 136, 255, 0.22));
+          opacity: 0.52 !important;
+        }
+        .lotus-petal.layer-front {
+          filter: drop-shadow(0 6px 14px rgba(255, 122, 189, 0.3));
+          opacity: 0.82 !important;
+        }
+        @keyframes petals-fall {
+          0% { transform: translate3d(0, -10vh, 0) rotate(0deg); opacity: 0; }
+          8% { opacity: 0.85; }
+          100% { transform: translate3d(var(--drift, 20px), 110vh, 0) rotate(340deg); opacity: 0; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .lotus-petal { animation: none !important; opacity: 0.18; top: 18px; }
+        }
       `}</style>
 
       {/* ── HERO SECTION ── */}
       <section className="relative min-h-[90vh] flex items-center overflow-hidden hero-gradient pt-[90px] w-full">
+        <img
+          src="/Images/lotus-floral-top.svg"
+          alt="Lotus floral design"
+          className="absolute top-0 left-0 w-full h-[240px] md:h-[280px] object-cover opacity-95 pointer-events-none"
+        />
+        <img
+          src="/Images/lotus-floral-top.svg"
+          alt="Lotus floral design bottom"
+          className="absolute bottom-0 left-0 w-[40%] h-[180px] md:h-[210px] object-cover opacity-80 pointer-events-none scale-y-[-1] -scale-x-100"
+        />
+        <img
+          src="/Images/lotus-floral-top.svg"
+          alt="Lotus floral design bottom"
+          className="absolute bottom-0 right-0 w-[40%] h-[180px] md:h-[210px] object-cover opacity-80 pointer-events-none scale-y-[-1]"
+        />
+        <div className="absolute inset-0 pointer-events-none">
+          {Array.from({ length: 26 }).map((_, i) => {
+            const width = 8 + (i % 6) * 2;
+            const height = 14 + (i % 5) * 3;
+            const left = (i * 5 + (i % 7) * 9) % 100;
+            const delay = (i % 9) * -1.4;
+            const duration = 10 + (i % 8) * 1.2;
+            const drift = `${((i % 5) - 2) * 22}px`;
+            const layerClass = i % 3 === 0 ? 'layer-back' : (i % 4 === 0 ? 'layer-front' : '');
+            const palette = [
+              'linear-gradient(180deg, #ff9dcf 0%, #ff7ebd 100%)',
+              'linear-gradient(180deg, #d6b0ff 0%, #ad87ff 100%)',
+              'linear-gradient(180deg, #ffd9ee 0%, #ffb8df 100%)',
+              'linear-gradient(180deg, #ffe4b8 0%, #ffc982 100%)',
+              'linear-gradient(180deg, #f7b3ff 0%, #d58eff 100%)'
+            ];
+            return (
+              <span
+                key={`petal-${i}`}
+                className={`lotus-petal ${layerClass}`}
+                style={{
+                  left: `${left}%`,
+                  width: `${width}px`,
+                  height: `${height}px`,
+                  animationDuration: `${duration}s`,
+                  animationDelay: `${delay}s`,
+                  opacity: 0.75,
+                  '--drift': drift,
+                  background: palette[i % palette.length],
+                  transform: `rotate(${(i % 6) * 12}deg)`
+                }}
+              />
+            );
+          })}
+        </div>
+        {/* Book-cover-inspired bright floral orbs */}
+        <div className="absolute -top-24 -left-16 w-72 h-72 rounded-full bg-[#ff7bc8]/30 blur-3xl pointer-events-none" />
+        <div className="absolute top-10 left-[30%] w-60 h-60 rounded-full bg-[#a982ff]/25 blur-3xl pointer-events-none" />
+        <div className="absolute top-0 right-0 w-80 h-80 rounded-full bg-[#ffa63d]/25 blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-[40%] w-72 h-72 rounded-full bg-[#66d3ff]/20 blur-3xl pointer-events-none" />
         <div className="w-full px-4 sm:px-[6%] lg:px-[10%] grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
 
           {/* Left Content */}
@@ -98,7 +187,7 @@ const LandingPage = () => {
             className="z-10"
           >
             <div className="inline-block px-5 py-2 bg-[#F3E7ED] rounded-2xl mb-8 border border-white/50">
-              <span className="text-[10px] font-bold text-[#A98DA4] tracking-[0.2em] uppercase">India's #1 Women Wellness Portal</span>
+              <span className="text-[10px] font-bold text-[#A98DA4] tracking-[0.2em] uppercase">India's #1 Women's Wellness Portal</span>
             </div>
 
             <h1 className="text-3xl md:text-[50px] font-bold text-[#2D1520] mb-6 leading-[1.1] tracking-tight">
@@ -108,44 +197,16 @@ const LandingPage = () => {
             </h1>
 
             <p className="text-[15px] text-[#6B5E63] leading-relaxed max-w-lg mb-8 font-medium opacity-90">
-              A safe, beautiful space for women to heal, grow, and thrive. From PCOD guides to emotional healing — we understand you. 🌸
+              A safe, beautiful space for women to heal, grow, and thrive with trusted care, expert support, and emotional strength.
             </p>
-
-            {/* Mood Selector */}
-            <div className="mb-8">
-              <p className="text-[12px] font-bold text-[#8E7F84] mb-4">How are you feeling today?</p>
-              <div className="flex flex-wrap gap-3">
-                {[
-                  { label: 'Happy', icon: '😊', color: '#FEECEC', text: '#D17B88' },
-                  { label: 'Tired', icon: '😴', color: '#F3EAFC', text: '#9079C1' },
-                  { label: 'Stressed', icon: '😟', color: '#FEECEC', text: '#D17B88' },
-                  { label: 'Low Energy', icon: '😴', color: '#FEF9E3', text: '#CCAA3D' },
-                ].map((mood) => (
-                  <button
-                    key={mood.label}
-                    onClick={() => {
-                      localStorage.setItem('pendingMood', mood.label);
-                      navigate('/login');
-                    }}
-                    className="flex items-center gap-2 px-4 py-2 rounded-full transition-all hover:scale-105 shadow-sm border border-white/40"
-                    style={{ backgroundColor: mood.color, color: mood.text }}
-                  >
-                    <span className="text-base">{mood.icon}</span>
-                    <span className="text-[12px] font-bold">{mood.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
 
             <div className="flex flex-col sm:flex-row items-center gap-4 mb-10">
               <button
+                onClick={() => scrollToSection('demo')}
                 className="px-8 py-3.5 text-white rounded-[2rem] font-bold text-[13px] shadow-xl hover:shadow-2xl transition-all w-full sm:w-auto"
-                style={{ background: 'linear-gradient(135deg, rgb(216, 167, 177), rgb(156, 123, 184))' }}
+                style={{ background: 'linear-gradient(135deg, rgb(216, 120, 184), rgb(132, 102, 255))' }}
               >
-                Begin My Healing Journey
-              </button>
-              <button className="px-8 py-3.5 bg-white border-2 border-[#F3E7ED] text-[#A98DA4] rounded-[2rem] font-bold text-[13px] hover:bg-rose-50/30 transition-all w-full sm:w-auto shadow-sm">
-                Explore Features
+                Watch App Intro Video
               </button>
             </div>
 
@@ -495,10 +556,10 @@ const LandingPage = () => {
               <span className="text-[10px] font-black text-[#D17B88] uppercase tracking-[0.2em]">Live Demo</span>
             </div>
             <h2 className="text-4xl sm:text-5xl font-black text-[#2D1520] mb-6 tracking-tight">
-              How to use <span className="text-[#ff69b4]">Health Sakhi</span>
+              What is <span className="text-[#ff69b4]">Health Sakhi</span>
             </h2>
             <p className="text-lg text-[#6B5E63] max-w-2xl mx-auto font-medium opacity-80">
-              Take a quick tour of our platform and see how easy it is to start your wellness journey today.
+              Watch this quick intro to understand the HealthSakhi app experience and how women can begin their wellness journey.
             </p>
           </div>
 
@@ -563,6 +624,87 @@ const LandingPage = () => {
                 <CheckCircle size={24} fill="currentColor" />
               </div>
               <p className="font-black text-[#2D1520] uppercase text-xs tracking-widest">Expert Support</p>
+            </div>
+          </div>
+
+          {/* Poem video block after intro video */}
+          <div className="mt-16 text-center">
+            <div className="inline-block px-4 py-1.5 bg-[#F3EAFC] rounded-full mb-6">
+              <span className="text-[10px] font-black text-[#9079C1] uppercase tracking-[0.2em]">Book Back Cover Poem</span>
+            </div>
+            <h3 className="text-3xl sm:text-4xl font-black text-[#2D1520] mb-4 tracking-tight">
+              Proud to Be a Woman
+            </h3>
+            <p className="text-base text-[#6B5E63] max-w-3xl mx-auto font-medium opacity-80 mb-8 leading-relaxed">
+              A visual poem from Health Sakhi with the client-approved back-cover artwork and voiceover-ready presentation.
+            </p>
+
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className={`relative w-full mx-auto rounded-[2.5rem] overflow-hidden shadow-[0_40px_80px_-15px_rgba(0,0,0,0.12)] group border-[10px] border-white ${poemVideoMissing ? 'max-w-[560px]' : 'max-w-[800px]'}`}
+            >
+              <div
+                className={`${poemVideoMissing ? 'aspect-[3/4] bg-[#f4e7f8]' : 'aspect-video bg-slate-900'} relative cursor-pointer`}
+                onClick={() => setIsPlayingPoem(!isPlayingPoem)}
+              >
+                {!poemVideoMissing ? (
+                  <video
+                    src="/Videos/proud-to-be-a-woman.mp4"
+                    poster="/Images/book-back-cover-poem-health-sakhi.png"
+                    className="w-full h-full object-contain"
+                    controls
+                    playsInline
+                    onError={() => setPoemVideoMissing(true)}
+                    ref={(el) => {
+                      if (!el) return;
+                      if (isPlayingPoem) {
+                        el.play().catch(() => {});
+                      } else {
+                        el.pause();
+                      }
+                    }}
+                  />
+                ) : (
+                  <div className="w-full h-full relative bg-[#f6ecfb]">
+                    <img
+                      src="/Images/book-back-cover-poem-health-sakhi.png"
+                      alt=""
+                      aria-hidden="true"
+                      className="absolute inset-0 w-full h-full object-cover blur-md scale-110 opacity-40"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-b from-white/15 to-[#2D1520]/10" />
+                    <div className="absolute inset-0 flex items-center justify-center p-4 sm:p-5">
+                      <img
+                        src="/Images/book-back-cover-poem-health-sakhi.png"
+                        alt="Book back cover poem"
+                        className="w-auto h-full max-h-full object-contain rounded-xl shadow-[0_12px_30px_rgba(45,21,32,0.22)] border border-white/60"
+                      />
+                    </div>
+                    <div className="absolute top-4 right-4 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-white/85 text-[#8f3b73] shadow">
+                      Voiceover video coming soon
+                    </div>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── LEGAL DISCLAIMER ── */}
+      <section className="py-20 bg-[#fff8fb] w-full border-y border-rose-100/60">
+        <div className="w-full px-4 sm:px-[6%] lg:px-[10%]">
+          <div className="max-w-5xl mx-auto">
+            <div className="inline-block px-4 py-1.5 bg-white rounded-full mb-6 border border-rose-100">
+              <span className="text-[10px] font-black text-[#D17B88] uppercase tracking-[0.2em]">Legal Disclaimer</span>
+            </div>
+            <div className="bg-white rounded-[2rem] p-6 sm:p-8 md:p-10 shadow-sm border border-rose-100/60 text-[#5E5058] space-y-4 leading-relaxed">
+              <p>This book is written for information and education as well as for emotional reflection, personal awareness, and relationship understanding. It is not a substitute for professional counselling, couples therapy, psychological treatment, legal advice, or medical care. The stories, names, and characters in every chapter are entirely fictional and created for educational and emotional illustration only. Any resemblance to real persons, living or dead, is purely coincidental.</p>
+              <p>The author, publisher, and distributor expressly disclaim all liability for any harm arising from the use or application of ideas in this book. Every relationship is unique. What resonates for one person may not apply to another. This book is not a guide for making major life decisions. It is an invitation to reflect honestly and kindly on your own inner experience.</p>
+              <p>If you or someone you know is experiencing domestic abuse, emotional violence, severe depression, self-harm, or any situation involving personal safety, please seek qualified professional help immediately. This book is not a crisis resource.</p>
+              <p>Copyright belongs to HealthSakhi and Dr. Pratap Madhukar. All rights reserved. No part of this publication may be reproduced without prior written permission. Contact: HealthSakhiai@hotmail.com | www.healthsakhi.com</p>
             </div>
           </div>
         </div>
