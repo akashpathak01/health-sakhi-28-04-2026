@@ -2,38 +2,124 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 @theme {
-  /* ── Core Brand Identity ── */
-  --color-plum-heavy:       #2D1520;   /* deep background/text */
-  --color-plum-brand:       #ff69b4;   /* primary brand color */
-  --color-plum-muted:       #C4A0AC;   /* secondary muted text */
-  --color-plum-soft:        #FDEEF1;   /* very light bg blush */
-  --color-plum-border:      #F5E6EA;   /* dedicated border color */
-  --color-plum-rose:        #F5B4BC;   /* accent rose */
+  /* ── Indian Culture Inspired Palette ── */
+  
+  /* Turmeric (Action) */
+  --color-turmeric-amber:   #BA7517;   /* Primary Action / CTA */
+  --color-turmeric-soft:    #FAEEDA;   /* Info boxes / Section fills */
+  --color-turmeric-deep:    #8540FB;   /* Deep text on amber */
 
-  /* ── Legacy tokens for health-* compatibility ── */
-  --color-health-green:     #ff69b4;
-  --color-health-pink:      #F5B4BC;
-  --color-health-white:     #FFFFFF;
-  --color-health-dark:      #2D1520;
-  --color-health-gray:      #9A8A8E;
-  --color-health-soft:      #FFF7F8;
+  /* Sindoor (Warmth/Health) */
+  --color-sindoor-soft:     #FBEAF0;   /* Cycle/Intimate health UI */
+  --color-sindoor-rose:     #DE3745;   /* Heart icons / Indicators */
+  --color-sindoor-deep:     #993556;   /* Rose background text */
 
-  --radius-xl: 20px;
-  --radius-2xl: 32px;
-  --radius-3xl: 48px;
+  /* Tulsi (Grounding/Wellness) */
+  --color-tulsi-soft:       #EEF1E5;   /* Wellness / Breathing UI fill */
+  --color-tulsi-teal:       #1975DE;   /* Grounding indicators */
+  --color-tulsi-deep:       #0656FE;   /* Teal background text */
+
+  /* Lotus (Brand/Logo) */
+  --color-lotus-purple:     #DD7F77;   /* Logo / Founder accents */
+  --color-lotus-soft:       #EEEDFE;   /* Sakhi avatar bg / Section fill */
+  --color-lotus-deep:       #5347AB;   /* Links / Purple bg text */
+
+  /* Earth & Surfaces (Backgrounds/Text) */
+  --color-cream-bg:         #FBF7EF;   /* Main page background */
+  --color-cream-deep:       #E9EDFC;   /* Deeper surface contrast */
+  --color-earth-dark:       #3336AA;   /* Headings / Body text */
+  --color-earth-muted:      #6663BA;   /* Secondary text */
+  --color-earth-hint:       #888780;   /* Captions / Timestamps */
+  --color-cream-border:     #E9EDFC;   /* Borders / Dividers */
+  --color-charcoal:         #222CCA;   /* Formal dark surfaces / Circles */
+
+  /* Legacy aliases for compatibility */
+  --color-plum-heavy:       var(--color-charcoal);
+  --color-plum-brand:       var(--color-turmeric-amber);
+  --color-plum-muted:       var(--color-earth-muted);
+  --color-plum-soft:        var(--color-cream-bg);
+  --color-plum-border:      var(--color-cream-border);
 }
 
 :root {
   font-family: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif;
-  background-color: #FFF7F8;
-  color: #2D1520;
+  background-color: var(--color-cream-bg);
+  color: var(--color-earth-dark);
   -webkit-font-smoothing: antialiased;
+}
+
+@layer utilities {
+  .glass-section {
+    @apply backdrop-blur-[24px] bg-white/60 border border-white/40 shadow-[0_8px_32px_rgba(0,0,0,0.04)];
+    box-shadow: inset 0 0 20px rgba(255,255,255,0.2);
+  }
+  
+  .glass-card {
+    @apply backdrop-blur-xl bg-white/40 border border-white/30 shadow-lg transition-all duration-500;
+  }
+
+  .glow-border {
+    position: relative;
+  }
+  
+  .glow-border::after {
+    content: '';
+    @apply absolute inset-0 rounded-[inherit] border border-white/40 pointer-events-none transition-opacity duration-500;
+    box-shadow: 0 0 15px var(--color-turmeric-amber);
+    opacity: 0;
+  }
+  
+  .glow-border:hover::after {
+    opacity: 0.15;
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-shimmer {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.2) 50%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite linear;
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-15px); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
 body {
   margin: 0;
   overflow-x: hidden;
-  background: #FFF7F8;
+  background-image: url('/Images/Gemini_Generated_Image_3spsij3spsij3sps.png');
+  background-attachment: fixed;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Add an overlay to the body to ensure content readability */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(251, 247, 239, 0.85); /* Semi-transparent warm cream overlay */
+  z-index: -1;
+  pointer-events: none;
 }
 
 @layer base {
@@ -52,7 +138,7 @@ body {
   }
 
   .btn-plum-outline {
-    @apply px-8 py-4 bg-white border-2 border-plum-border text-plum-heavy rounded-[2rem] 
+    @apply px-8 py-4 bg-white/50 backdrop-blur-sm border-2 border-plum-border text-plum-heavy rounded-[2rem] 
            font-black text-[12px] uppercase tracking-[0.2em] transition-all duration-300
            hover:bg-plum-soft hover:border-plum-brand active:scale-95 
            flex items-center justify-center gap-3 cursor-pointer;
@@ -60,8 +146,12 @@ body {
 
   /* ── Glassmorphic Cards ── */
   .plum-card {
-    @apply bg-white rounded-[3rem] border border-plum-border shadow-sm 
+    @apply bg-white/70 backdrop-blur-md rounded-[3rem] border border-white/40 shadow-xl 
            transition-all duration-500 hover:shadow-2xl hover:shadow-plum-brand/5;
+  }
+  
+  .glass-section {
+    @apply bg-white/40 backdrop-blur-lg rounded-[40px] border border-white/40 shadow-2xl;
   }
 
   /* ── Custom Scrollbar ── */

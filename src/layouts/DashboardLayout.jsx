@@ -23,7 +23,6 @@ const ROLE_CONFIG = {
     ],
     sakhiModules: [
       { name: 'Meditation Sakhi', icon: PlayCircle, path: '/app/meditation' },
-      { name: 'Wealth Sakhi', icon: DollarSign, path: '/app/wealth' },
       { name: 'To-Do List', icon: CheckIcon, path: '/app/todo' },
       { name: 'Home Budget Sakhi', icon: CreditCard, path: '/app/finance' },
       { name: 'Affirmations', icon: Sparkles, path: '/app/affirmation' },

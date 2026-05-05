@@ -1,948 +1,606 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
-import { Heart, Sparkles, BookOpen, Video, Users, Check, Star, ArrowRight, Play, Pause, MessageCircle, Activity, ShieldCheck, Zap, Globe, HeartPulse, DollarSign, CheckCircle } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
-import { defaultPlans, MEMBER_PLAN_KEY, PLAN_STORAGE_KEY } from '../data/planCatalog';
+import React, { useState } from 'react';
+import { Heart, ChevronRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import InfiniteBookCarousel from '../components/InfiniteBookCarousel';
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.15,
+      delayChildren: 0.1
+    }
+  }
+};
+
+const cardVariants = {
+  hidden: { 
+    opacity: 0, 
+    y: 40, 
+    scale: 0.92,
+    filter: 'blur(10px)'
+  },
+  visible: { 
+    opacity: 1, 
+    y: 0, 
+    scale: 1,
+    filter: 'blur(0px)',
+    transition: {
+      type: 'spring',
+      damping: 20,
+      stiffness: 100
+    }
+  }
+};
+
+const ChatPreview = () => {
+  return (
+    <div className="relative w-full max-w-[440px] mx-auto">
+      {/* Phone Mockup / Card Container */}
+      <div className="bg-white/80 backdrop-blur-2xl rounded-[40px] shadow-[0_32px_64px_rgba(0,0,0,0.1)] border border-white/60 overflow-hidden flex flex-col h-[480px] sm:h-[520px] lg:h-[500px] animate-float">
+        {/* Chat Header */}
+        <div className="bg-lotus-soft border-b border-cream-border p-4 flex items-center gap-3">
+          <div className="w-12 h-12 rounded-full bg-cream-bg flex items-center justify-center border border-turmeric-amber/20 overflow-hidden">
+            <img 
+              src="/Images/WhatsApp Image 2026-05-04 at 6.32.54 PM.jpeg" 
+              alt="Sakhi" 
+              className="w-full h-full object-cover mix-blend-multiply contrast-[1.1] brightness-[1.05]" 
+            />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-earth-dark flex items-center gap-2">
+              Sakhi <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+            </p>
+            <p className="text-[10px] text-earth-muted font-medium uppercase tracking-wider">online · day 23 of your cycle</p>
+          </div>
+        </div>
+
+        {/* Chat Body */}
+        <div className="flex-1 p-5 space-y-4 overflow-y-auto no-scrollbar bg-[#FBF7EF]/30">
+          {/* Sakhi Message */}
+          <div className="flex flex-col items-start max-w-[85%]">
+            <div className="bg-white p-3 rounded-2xl rounded-tl-none shadow-sm border border-cream-border">
+              <p className="text-sm text-earth-dark leading-relaxed">Subah ho gayi. How are you sakhi?</p>
+            </div>
+            <span className="text-[9px] text-earth-muted mt-1 ml-1">08:30 AM</span>
+          </div>
+
+          {/* User Message */}
+          <div className="flex flex-col items-end self-end max-w-[85%] ml-auto">
+            <div className="bg-turmeric-amber p-3 rounded-2xl rounded-tr-none shadow-md">
+              <p className="text-sm text-white leading-relaxed font-medium">Thaki hui hoon</p>
+            </div>
+            <span className="text-[9px] text-earth-muted mt-1 mr-1">08:31 AM</span>
+          </div>
+
+          {/* Sakhi Response */}
+          <div className="flex flex-col items-start max-w-[85%]">
+            <div className="bg-white p-3 rounded-2xl rounded-tl-none shadow-sm border border-cream-border">
+              <p className="text-sm text-earth-dark leading-relaxed">
+                Day 23 — your body works harder this week. Shall I just sit with you or do you want a 4-minute breathing break?
+              </p>
+            </div>
+            <span className="text-[9px] text-earth-muted mt-1 ml-1">08:31 AM</span>
+          </div>
+        </div>
+
+        {/* Chat Footer / Reply Chips */}
+        <div className="p-4 bg-white border-t border-cream-border space-y-3">
+          <div className="flex flex-wrap gap-2">
+            {['Just sit with me', 'Breathing break', 'Send voice note'].map((chip) => (
+              <button key={chip} className="px-3 py-1.5 rounded-full border border-turmeric-amber/30 text-[11px] font-bold text-turmeric-amber bg-turmeric-amber/5 hover:bg-turmeric-amber hover:text-white transition-all">
+                {chip}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-2 px-3 py-2 bg-cream-bg rounded-full border border-cream-border">
+            <div className="flex-1 text-[11px] text-earth-hint">Type a message...</div>
+            <div className="w-6 h-6 rounded-full bg-turmeric-amber flex items-center justify-center">
+              <ChevronRight size={14} className="text-white" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const LandingPage = () => {
-  const navigate = useNavigate();
-  const [activeTestimonial, setActiveTestimonial] = useState(0);
-  const [isYearly, setIsYearly] = useState(false);
+  const [pricingTab, setPricingTab] = useState('subscription');
 
-  const testimonials = [
+  const differentiators = [
     {
-      name: "Priya Sharma",
-      role: "Teacher, Mumbai",
-      quote: "HealthSakhi changed my life. I finally understood my PCOD and healed naturally. The AI Sakhi chat felt like talking to my best friend — no judgment, pure love.",
-      img: "/Images/image7.png"
+      title: 'Talks in your mother tongue',
+      icon: 'MessageSquareText',
+      description: 'Periods, pregnancy, perimenopause. Sakhī understands them in the language you think in. Hindi, Marathi, Tamil, Telugu, Bengali, Arabic, English.',
+      bgColor: 'bg-turmeric-soft/30',
+      iconColor: 'text-turmeric-amber'
     },
     {
-      name: "Ananya Reddy",
-      role: "IT Professional, Hyderabad",
-      quote: "I was skeptical at first, but the emotional healing programs truly helped me manage stress. The mood check feature every morning is now part of my routine!",
-      img: "/Images/image8.png"
+      title: 'Built on every cycle you live',
+      icon: 'MoonStar',
+      description: 'Monthly cycle, lunar cycle, Nakshatra. Karva Chauth with PCOD, Ramadan hydration, or monsoon mood dips. Built for the Indian woman.',
+      bgColor: 'bg-sindoor-soft/30',
+      iconColor: 'text-sindoor-rose'
     },
     {
-      name: "Meera Pillai",
-      role: "Homemaker, Kerala",
-      quote: "The book library is incredible! I read the Hunger Mystery book and understood my cravings for the first time. The platform truly feels like a trusted sister.",
-      img: "/Images/image9.png"
-    },
-    {
-      name: "Kavitha Nair",
-      role: "Entrepreneur, Bangalore",
-      quote: "Premium membership is worth every rupee. The advisor sessions with certified consultants helped me tackle hormonal issues I had been ignoring for years.",
-      img: "/Images/image10.png"
-    },
-    {
-      name: "Sunita Patel",
-      role: "Student, Ahmedabad",
-      quote: "As a young woman navigating puberty and emotional changes, HealthSakhi was a safe space I never knew I needed. The gentle language makes you feel so understood.",
-      img: "/Images/image11.png"
+      title: 'Sits with you when you do not want to talk',
+      icon: 'HeartHandshake',
+      description: 'Send voice notes or tap "Sit with me" for 4 minutes of shared silence and a soft note. No solving, no judgment. Just a sister who listens.',
+      bgColor: 'bg-lotus-soft/30',
+      iconColor: 'text-lotus-deep'
     }
   ];
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setActiveTestimonial((prev) => (prev + 1) % testimonials.length);
-    }, 3000);
-    return () => clearInterval(timer);
-  }, []);
+  const dayMoments = [
+    { time: '6:45 AM', label: 'MORNING', text: 'Subah ki chai? Today is day 23 — your body is working harder. Go gentle on yourself.', icon: 'Sunrise' },
+    { time: '1:30 PM', label: 'AFTER LUNCH', text: 'Five minutes of walking even in the kitchen. Your kapha will thank you.', icon: 'Sun' },
+    { time: '7:00 PM', label: 'WIND DOWN', text: 'Tell me about today — voice or type. I’ll listen, no advice unless you ask.', icon: 'Sunset' },
+    { time: '10:30 PM', label: 'BEFORE SLEEP', text: 'Shall I prepare a 4-minute soft sleep meditation for you? Kal ke liye.', icon: 'Moon' }
+  ];
 
-  const { scrollYProgress } = useScroll();
-  const y1 = useTransform(scrollYProgress, [0, 1], [0, -200]);
-  const y2 = useTransform(scrollYProgress, [0, 1], [0, 200]);
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.3 } }
-  };
+  const circles = [
+    { title: 'Trying to conceive', subtitle: 'For the in-between months', capacity: '4 of 6 full', progress: 66 },
+    { title: 'Perimenopause', subtitle: '38-50, in any country', capacity: '5 of 6 full', progress: 83 },
+    { title: 'PCOD warriors', subtitle: 'Cycles, weight, sleep, mood', capacity: '2 of 6 full', progress: 33 },
+    { title: 'Gulf Mums', subtitle: 'Pregnancy far from home', capacity: '3 of 6 full', progress: 50 }
+  ];
 
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } }
-  };
-
-  const [isPlayingDemo, setIsPlayingDemo] = useState(true);
-  const [isPlayingPoem, setIsPlayingPoem] = useState(false);
-  const [poemVideoMissing, setPoemVideoMissing] = useState(false);
-  const [pricingPlans, setPricingPlans] = useState(defaultPlans);
-
-  const scrollToSection = (id) => {
-    const target = document.getElementById(id);
-    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-
-  useEffect(() => {
-    const savedPlans = localStorage.getItem(PLAN_STORAGE_KEY);
-    if (!savedPlans) return;
-    try {
-      const parsedPlans = JSON.parse(savedPlans);
-      if (Array.isArray(parsedPlans) && parsedPlans.length > 0) {
-        setPricingPlans(parsedPlans);
-      }
-    } catch (error) {
-      setPricingPlans(defaultPlans);
+  const testimonials = [
+    {
+      text: "I never told my mother. I never told my doctor. Somehow I told Sakhi at 2 am and she just stayed.",
+      author: "Anjali, 34",
+      location: "Pune"
+    },
+    {
+      text: "My Marathi sounds like my aaji's. That's the first time an app spoke to me, not at me.",
+      author: "Sneha, 41",
+      location: "Sharjah"
     }
-  }, []);
+  ];
 
   return (
-    <div className="w-full overflow-x-hidden" style={{ background: 'linear-gradient(135deg, rgb(255, 232, 245) 0%, rgb(236, 245, 255) 50%, rgb(255, 242, 214) 100%)' }}>
-      <style>{`
-        .glass-card { background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.8); }
-        .hero-gradient { background: linear-gradient(135deg, rgb(255, 216, 236) 0%, rgb(236, 222, 255) 35%, rgb(211, 236, 255) 68%, rgb(255, 230, 186) 100%); }
-        .lotus-petal {
-          position: absolute;
-          top: -80px;
-          border-radius: 60% 40% 65% 35%;
-          filter: drop-shadow(0 4px 10px rgba(255, 131, 190, 0.25));
-          animation-name: petals-fall;
-          animation-timing-function: linear;
-          animation-iteration-count: infinite;
-          will-change: transform, opacity;
-          pointer-events: none;
-        }
-        .lotus-petal.layer-back {
-          filter: blur(0.4px) drop-shadow(0 2px 8px rgba(157, 136, 255, 0.22));
-          opacity: 0.52 !important;
-        }
-        .lotus-petal.layer-front {
-          filter: drop-shadow(0 6px 14px rgba(255, 122, 189, 0.3));
-          opacity: 0.82 !important;
-        }
-        @keyframes petals-fall {
-          0% { transform: translate3d(0, -10vh, 0) rotate(0deg); opacity: 0; }
-          8% { opacity: 0.85; }
-          100% { transform: translate3d(var(--drift, 20px), 110vh, 0) rotate(340deg); opacity: 0; }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .lotus-petal { animation: none !important; opacity: 0.18; top: 18px; }
-        }
-      `}</style>
-
-      {/* ── HERO SECTION ── */}
-      <section className="relative min-h-[90vh] flex items-center overflow-hidden hero-gradient pt-[90px] w-full">
-        <img
-          src="/Images/lotus-floral-top.svg"
-          alt="Lotus floral design"
-          className="absolute top-0 left-0 w-full h-[240px] md:h-[280px] object-cover opacity-95 pointer-events-none"
-        />
-        <img
-          src="/Images/lotus-floral-top.svg"
-          alt="Lotus floral design bottom"
-          className="absolute bottom-0 left-0 w-[40%] h-[180px] md:h-[210px] object-cover opacity-80 pointer-events-none scale-y-[-1] -scale-x-100"
-        />
-        <img
-          src="/Images/lotus-floral-top.svg"
-          alt="Lotus floral design bottom"
-          className="absolute bottom-0 right-0 w-[40%] h-[180px] md:h-[210px] object-cover opacity-80 pointer-events-none scale-y-[-1]"
-        />
-        <div className="absolute inset-0 pointer-events-none">
-          {Array.from({ length: 26 }).map((_, i) => {
-            const width = 8 + (i % 6) * 2;
-            const height = 14 + (i % 5) * 3;
-            const left = (i * 5 + (i % 7) * 9) % 100;
-            const delay = (i % 9) * -1.4;
-            const duration = 10 + (i % 8) * 1.2;
-            const drift = `${((i % 5) - 2) * 22}px`;
-            const layerClass = i % 3 === 0 ? 'layer-back' : (i % 4 === 0 ? 'layer-front' : '');
-            const palette = [
-              'linear-gradient(180deg, #ff9dcf 0%, #ff7ebd 100%)',
-              'linear-gradient(180deg, #d6b0ff 0%, #ad87ff 100%)',
-              'linear-gradient(180deg, #ffd9ee 0%, #ffb8df 100%)',
-              'linear-gradient(180deg, #ffe4b8 0%, #ffc982 100%)',
-              'linear-gradient(180deg, #f7b3ff 0%, #d58eff 100%)'
-            ];
-            return (
-              <span
-                key={`petal-${i}`}
-                className={`lotus-petal ${layerClass}`}
-                style={{
-                  left: `${left}%`,
-                  width: `${width}px`,
-                  height: `${height}px`,
-                  animationDuration: `${duration}s`,
-                  animationDelay: `${delay}s`,
-                  opacity: 0.75,
-                  '--drift': drift,
-                  background: palette[i % palette.length],
-                  transform: `rotate(${(i % 6) * 12}deg)`
-                }}
-              />
-            );
-          })}
+    <div className="w-full overflow-x-hidden bg-transparent text-earth-dark">
+      <section id="home" className="relative min-h-[90vh] lg:h-[calc(100vh-6rem)] lg:min-h-[600px] flex items-center pt-8 pb-12 lg:pt-4 lg:pb-4 overflow-hidden">
+        {/* Full Hero Background Overlay */}
+        <div className="absolute inset-0 opacity-15 pointer-events-none overflow-hidden">
+          <img 
+            src="/Images/WhatsApp Image 2026-05-04 at 6.54.51 PM.jpeg" 
+            alt="" 
+            className="w-full h-full object-cover" 
+          />
         </div>
-        {/* Book-cover-inspired bright floral orbs */}
-        <div className="absolute -top-24 -left-16 w-72 h-72 rounded-full bg-[#ff7bc8]/30 blur-3xl pointer-events-none" />
-        <div className="absolute top-10 left-[30%] w-60 h-60 rounded-full bg-[#a982ff]/25 blur-3xl pointer-events-none" />
-        <div className="absolute top-0 right-0 w-80 h-80 rounded-full bg-[#ffa63d]/25 blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-[40%] w-72 h-72 rounded-full bg-[#66d3ff]/20 blur-3xl pointer-events-none" />
-        <div className="w-full px-4 sm:px-[6%] lg:px-[10%] grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        
+        {/* Background Glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-[#BA7517]/5 blur-[100px] rounded-full pointer-events-none"></div>
 
-          {/* Left Content */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="z-10"
-          >
-            <div className="inline-block px-5 py-2 bg-[#F3E7ED] rounded-2xl mb-8 border border-white/50">
-              <span className="text-[10px] font-bold text-[#A98DA4] tracking-[0.2em] uppercase">India's #1 Women's Wellness Portal</span>
-            </div>
-
-            <h1 className="text-3xl md:text-[50px] font-bold text-[#2D1520] mb-6 leading-[1.1] tracking-tight">
-              Your Personal <br />
-              <span className="text-[#B197B0]">Wellness Sakhi</span> <br />
-              is here for you
-            </h1>
-
-            <p className="text-[15px] text-[#6B5E63] leading-relaxed max-w-lg mb-8 font-medium opacity-90">
-              A safe, beautiful space for women to heal, grow, and thrive with trusted care, expert support, and emotional strength.
-            </p>
-
-            <div className="flex flex-col sm:flex-row items-center gap-4 mb-10">
-              <button
-                onClick={() => scrollToSection('demo')}
-                className="px-8 py-3.5 text-white rounded-[2rem] font-bold text-[13px] shadow-xl hover:shadow-2xl transition-all w-full sm:w-auto"
-                style={{ background: 'linear-gradient(135deg, rgb(216, 120, 184), rgb(132, 102, 255))' }}
-              >
-                Watch App Intro Video
-              </button>
-            </div>
-
-            {/* Stats */}
-            <div className="flex items-center gap-10 md:gap-14 opacity-80">
-              <div>
-                <p className="text-xl font-bold text-[#2D1520]">50K+</p>
-                <p className="text-[9px] font-bold text-[#6B5E63] uppercase tracking-widest mt-1">Women Healed</p>
-              </div>
-              <div>
-                <p className="text-xl font-bold text-[#2D1520]">200+</p>
-                <p className="text-[9px] font-bold text-[#6B5E63] uppercase tracking-widest mt-1">Healing Programs</p>
-              </div>
-              <div>
-                <p className="text-xl font-bold text-[#2D1520]">98%</p>
-                <p className="text-[9px] font-bold text-[#6B5E63] uppercase tracking-widest mt-1">Happy Members</p>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Right Content - Visual */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1 }}
-            className="relative flex justify-center lg:justify-end lg:-mt-12"
-          >
-            {/* Main Image Container */}
-            <div className="relative w-full max-w-[400px] aspect-[1/1] lg:aspect-[4/4.2]">
-              <div className="absolute inset-0 bg-[#F3E7ED] rounded-[4rem] rotate-2 scale-[1.05] -z-10 shadow-2xl opacity-40"></div>
-              <div className="w-full h-full rounded-[4rem] overflow-hidden shadow-[0_40px_100px_-20px_rgba(0,0,0,0.15)] relative">
-                <img
-                  src="/Images/image.png"
-                  alt="Wellness Meditation"
-                  className="w-full h-full object-cover"
-                />
-
-                {/* Glass Badge - Top Right */}
-                <div className="absolute top-8 right-8 glass-card px-5 py-4 rounded-[1.5rem] flex flex-col shadow-xl">
-                  <span className="text-[11px] font-bold text-[#8E7F84] uppercase tracking-tighter mb-1">Healing Streak</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl font-bold text-[#2D1520]">21 Days</span>
-                    <span className="text-2xl">🔥</span>
-                  </div>
-                </div>
-
-                {/* Glass Badge - Bottom Left */}
-                <div className="absolute bottom-8 left-8 right-8 lg:right-auto lg:w-[300px] glass-card p-5 rounded-[2rem] shadow-2xl flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-[#A98DA4]/20 flex items-center justify-center">
-                    <Heart size={20} className="text-[#A98DA4]" fill="currentColor" />
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-bold text-[#A98DA4] uppercase tracking-widest mb-1">AI Sakhi says</p>
-                    <p className="text-base font-semibold text-[#2D1520] tracking-tight">You are doing amazing! ❤️</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Decorative elements */}
-            <div className="absolute -top-12 -right-12 w-64 h-64 bg-[#B197B0]/10 rounded-full blur-[80px] -z-10"></div>
-            <div className="absolute -bottom-12 -left-12 w-64 h-64 bg-[#FEECEC]/50 rounded-full blur-[100px] -z-10"></div>
-          </motion.div>
-
-        </div>
-      </section>
-
-      {/* ── FEATURES SECTION ── */}
-      <section id="features" className="py-24 scroll-mt-20 bg-white w-full">
-        <div className="w-full px-4 sm:px-[6%] lg:px-[10%]">
-          <div className="text-center mb-20">
-            <div className="inline-block px-4 py-1.5 bg-[#FDF0F3] rounded-full mb-6">
-              <span className="text-[10px] font-black text-[#D17B88] uppercase tracking-[0.2em]">Everything You Need</span>
-            </div>
-            <h2 className="text-4xl md:text-5xl font-bold text-[#2D1520] mb-6 tracking-tight">
-              Features made with <span className="text-[#B197B0]">love for you</span>
-            </h2>
-            <p className="text-[17px] text-[#8E7F84] max-w-2xl mx-auto leading-relaxed font-medium">
-              Every feature was built with one woman in mind — you. Not a software dashboard, but a warm companion for your journey.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[
-              {
-                title: "Women's Health Hub",
-                desc: "From PCOD to hormonal balance — deep expert guidance tailored just for you.",
-                img: "/Images/image1.png",
-                color: "#FDF0F3",
-                iconBg: "#FDF0F3",
-                iconColor: "#D17B88",
-                icon: HeartPulse
-              },
-              {
-                title: "Emotional Healing",
-                desc: "Guided sessions, journaling prompts, and mindfulness tools for inner peace.",
-                img: "/Images/image3.png",
-                color: "#F5F1FE",
-                iconBg: "#F5F1FE",
-                iconColor: "#9079C1",
-                icon: Sparkles
-              },
-              {
-                title: "AI Sakhi Chat",
-                desc: "Your 24/7 emotional companion — understands your feelings, never judges.",
-                img: "/Images/image2.png",
-                color: "#FFF9EE",
-                iconBg: "#FFF9EE",
-                iconColor: "#CCAA3D",
-                icon: MessageCircle
-              },
-              {
-                title: "Healing Book Library",
-                desc: "Curated books on PCOD, weight, hunger, heart health — read at your pace.",
-                img: "/Images/image4.png",
-                color: "#FDF0F3",
-                iconBg: "#FDF0F3",
-                iconColor: "#D17B88",
-                icon: BookOpen
-              },
-              {
-                title: "Video Healing Courses",
-                desc: "Netflix-style healing programs on puberty, pregnancy, stress and more.",
-                img: "/Images/image5.png",
-                color: "#F5F1FE",
-                iconBg: "#F5F1FE",
-                iconColor: "#9079C1",
-                icon: Video
-              },
-              {
-                title: "Advisor Sessions",
-                desc: "Schedule 1-on-1 consultations with certified women wellness advisors.",
-                img: "/Images/image6.png",
-                color: "#FFF9EE",
-                iconBg: "#FFF9EE",
-                iconColor: "#CCAA3D",
-                icon: Users
-              },
-              {
-                title: "Meditation Sakhi",
-                desc: "Find your inner calm with guided meditation and breathing exercises.",
-                img: "/Images/image1.png",
-                color: "#FDF0F3",
-                iconBg: "#FDF0F3",
-                iconColor: "#D17B88",
-                icon: Play
-              },
-              {
-                title: "Wealth Sakhi",
-                desc: "Empower your financial future with smart wealth management tools.",
-                img: "/Images/image3.png",
-                color: "#F5F1FE",
-                iconBg: "#F5F1FE",
-                iconColor: "#9079C1",
-                icon: DollarSign
-              },
-              {
-                title: "To-Do List",
-                desc: "Organize your daily growth and productivity effectively.",
-                img: "/Images/image2.png",
-                color: "#FFF9EE",
-                iconBg: "#FFF9EE",
-                iconColor: "#CCAA3D",
-                icon: Check
-              },
-              {
-                title: "Home Budget Sakhi",
-                desc: "Manage your household expenses and savings with ease.",
-                img: "/Images/image4.png",
-                color: "#FDF0F3",
-                iconBg: "#FDF0F3",
-                iconColor: "#D17B88",
-                icon: Zap
-              },
-              {
-                title: "Affirmations",
-                desc: "Start your day with positive energy and empowering affirmations.",
-                img: "/Images/image5.png",
-                color: "#F5F1FE",
-                iconBg: "#F5F1FE",
-                iconColor: "#9079C1",
-                icon: Sparkles
-              },
-              {
-                title: "Mental Health",
-                desc: "Comprehensive support for your emotional and mental well-being.",
-                img: "/Images/image6.png",
-                color: "#FFF9EE",
-                iconBg: "#FFF9EE",
-                iconColor: "#CCAA3D",
-                icon: HeartPulse
-              },
-              {
-                title: "Love Sakhi",
-                desc: "Nurture your bonds and build healthy relationships.",
-                img: "/Images/image1.png",
-                color: "#FDF0F3",
-                iconBg: "#FDF0F3",
-                iconColor: "#D17B88",
-                icon: Users
-              },
-              {
-                title: "Grooming Sakhi",
-                desc: "Self-care and grooming tips to boost your confidence.",
-                img: "/Images/image3.png",
-                color: "#F5F1FE",
-                iconBg: "#F5F1FE",
-                iconColor: "#9079C1",
-                icon: Star
-              },
-              {
-                title: "Spiritual Sakhi",
-                desc: "Spiritual solutions based on Bhagavad Gita wisdom.",
-                img: "/Images/image2.png",
-                color: "#FFF9EE",
-                iconBg: "#FFF9EE",
-                iconColor: "#CCAA3D",
-                icon: Heart
-              }
-            ].map((feature, idx) => (
-              <motion.div
-                key={idx}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.1 }}
-                className="group rounded-[2rem] overflow-hidden flex flex-col h-full bg-white shadow-sm border border-black/5 hover:shadow-lg transition-all duration-500"
-              >
-                <div className="h-48 overflow-hidden">
-                  <img
-                    src={feature.img}
-                    alt={feature.title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
-                  />
-                </div>
-                <div className="p-6 flex flex-col flex-1" style={{ backgroundColor: feature.color }}>
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-white shadow-sm" style={{ color: feature.iconColor }}>
-                      <feature.icon size={18} />
-                    </div>
-                    <h3 className="text-lg font-bold text-[#2D1520] tracking-tight">{feature.title}</h3>
-                  </div>
-                  <p className="text-[14px] text-[#6B5E63] leading-relaxed opacity-80 font-medium">
-                    {feature.desc}
+        <div className="relative w-full px-4 sm:px-[6%] lg:px-[8%]">
+          <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-6 lg:gap-10 items-center">
+            {/* Left Column */}
+            <div className="space-y-6 animate-in fade-in slide-in-from-left-6 duration-1000">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <p className="text-sm md:text-base font-bold text-turmeric-amber tracking-wider">
+                    Healthy Woman = Healthy Family — Ayurveda
                   </p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── HOW IT WORKS / JOURNEY SECTION ── */}
-      <section id="how-it-works" className="py-16 scroll-mt-20 bg-[#FFF7F8]/50 overflow-hidden w-full">
-        <div className="w-full px-4 sm:px-[6%] lg:px-[10%]">
-          <div className="text-center mb-12">
-            <div className="inline-block px-4 py-1.5 bg-[#F3EAFC] rounded-full mb-6">
-              <span className="text-[10px] font-black text-[#9079C1] uppercase tracking-[0.2em]">Simple Steps</span>
-            </div>
-            <h2 className="text-4xl md:text-5xl font-bold text-[#2D1520] mb-6 tracking-tight">
-              Your healing journey <span className="text-[#B197B0]">starts here</span>
-            </h2>
-            <p className="text-[17px] text-[#8E7F84] max-w-2xl mx-auto leading-relaxed font-medium">
-              Just four gentle steps to begin transforming your health and happiness.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12 relative">
-            {[
-              {
-                step: "01",
-                title: "Create Your Profile",
-                desc: "Tell us about yourself — your health goals, feelings, and what you need most. Takes just 2 minutes.",
-                color: "#FDF0F3",
-                icon: Heart,
-                iconColor: "#D17B88"
-              },
-              {
-                step: "02",
-                title: "Explore Your Journey",
-                desc: "AI Sakhi curates a personalized healing path — videos, books, and programs just for you.",
-                color: "#F5F1FE",
-                icon: Globe,
-                iconColor: "#9079C1"
-              },
-              {
-                step: "03",
-                title: "Heal & Grow Daily",
-                desc: "Track your mood, complete healing sessions, and build healthy habits — one gentle step at a time.",
-                color: "#FFF9EE",
-                icon: Activity,
-                iconColor: "#CCAA3D"
-              },
-              {
-                step: "04",
-                title: "Celebrate Your Wins",
-                desc: "Watch your wellness score grow. Share milestones. Feel proud of every step forward.",
-                color: "#FDF0F3",
-                icon: Sparkles,
-                iconColor: "#D17B88"
-              }
-            ].map((step, idx) => (
-              <motion.div
-                key={idx}
-                initial={{ opacity: 0, scale: 0.95 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.1 }}
-                className="relative p-8 rounded-[2.5rem] flex flex-col group h-full shadow-sm hover:shadow-lg transition-all duration-500 border border-white/40"
-                style={{ backgroundColor: step.color }}
-              >
-                <div className="absolute top-8 right-8 text-[60px] font-black text-black/5 leading-none select-none tracking-tighter">
-                  {step.step}
-                </div>
-
-                <div className="relative z-10">
-                  <div className="w-11 h-11 rounded-2xl bg-white shadow-sm flex items-center justify-center mb-6" style={{ color: step.iconColor }}>
-                    <step.icon size={22} />
+                  <div className="flex items-center gap-4">
+                    <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-turmeric-amber/30"></div>
+                    <p className="text-lg md:text-xl font-medium text-turmeric-amber font-serif italic">
+                      ॥ स्त्रीणाम् स्वास्थ्यम् कुटुंब स्वास्थ्यम् ॥
+                    </p>
+                    <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-turmeric-amber/30"></div>
                   </div>
-                  <h3 className="text-lg font-bold text-[#2D1520] mb-3 tracking-tight">{step.title}</h3>
-                  <p className="text-[13px] leading-relaxed text-[#6B5E63] font-medium opacity-80">
-                    {step.desc}
-                  </p>
                 </div>
-              </motion.div>
-            ))}
-          </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="max-w-4xl mx-auto glass-card py-5 px-10 rounded-[2rem] text-center shadow-lg border border-white/60"
-          >
-            <p className="text-[16px] md:text-[18px] text-[#6B5E63] italic font-medium">
-              "Healing takes time. One small step today matters." — <span className="font-bold text-[#2D1520]">HealthSakhi</span>
-            </p>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ── DEMO / HOW TO USE SECTION ── */}
-      <section id="demo" className="py-24 bg-white w-full scroll-mt-20">
-        <div className="w-full px-4 sm:px-[6%] lg:px-[10%]">
-          <div className="text-center mb-16">
-            <div className="inline-block px-4 py-1.5 bg-[#FDF0F3] rounded-full mb-6">
-              <span className="text-[10px] font-black text-[#D17B88] uppercase tracking-[0.2em]">Live Demo</span>
-            </div>
-            <h2 className="text-4xl sm:text-5xl font-black text-[#2D1520] mb-6 tracking-tight">
-              What is <span className="text-[#ff69b4]">Health Sakhi</span>
-            </h2>
-            <p className="text-lg text-[#6B5E63] max-w-2xl mx-auto font-medium opacity-80">
-              Watch this quick intro to understand the HealthSakhi app experience and how women can begin their wellness journey.
-            </p>
-          </div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="relative w-full max-w-[800px] mx-auto rounded-[2.5rem] overflow-hidden shadow-[0_40px_80px_-15px_rgba(0,0,0,0.12)] group border-[10px] border-white"
-          >
-            <div
-              className="aspect-video bg-slate-900 relative cursor-pointer"
-              onClick={() => setIsPlayingDemo(!isPlayingDemo)}
-            >
-              {/* Actual Video */}
-              <video
-                src="https://ik.imagekit.io/rty16p00ub/health%20sakhi%20video.mp4"
-                className="w-full h-full object-contain"
-                autoPlay
-                loop
-                muted
-                playsInline
-                ref={(el) => {
-                  if (el) isPlayingDemo ? el.play() : el.pause();
-                }}
-              />
-
-              {/* Decorative Gradient Overlay */}
-              <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/40 to-transparent opacity-60"></div>
-
-              {/* Play/Pause Button Overlay */}
-              <div className={`absolute inset-0 flex items-center justify-center transition-all duration-300 ${isPlayingDemo ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'}`}>
-                <div className="w-20 h-20 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border border-white/40 shadow-2xl hover:scale-110 active:scale-95 transition-all">
-                  {isPlayingDemo ? (
-                    <Pause size={40} className="text-white" fill="currentColor" />
-                  ) : (
-                    <Play size={40} className="text-white ml-2" fill="currentColor" />
-                  )}
-                </div>
-              </div>
-            </div>
-
-
-            {/* Soft Glow Effect */}
-            <div className="absolute -inset-4 bg-health-green/10 blur-3xl -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
-          </motion.div>
-
-          <div className="mt-16 grid grid-cols-1 sm:grid-cols-3 gap-8 max-w-4xl mx-auto text-center">
-            <div className="space-y-3">
-              <div className="w-12 h-12 bg-rose-50 rounded-2xl flex items-center justify-center text-[#ff69b4] mx-auto shadow-sm">
-                <Play size={24} fill="currentColor" />
-              </div>
-              <p className="font-black text-[#2D1520] uppercase text-xs tracking-widest">Easy Onboarding</p>
-            </div>
-            <div className="space-y-3">
-              <div className="w-12 h-12 bg-rose-50 rounded-2xl flex items-center justify-center text-[#ff69b4] mx-auto shadow-sm">
-                <Zap size={24} fill="currentColor" />
-              </div>
-              <p className="font-black text-[#2D1520] uppercase text-xs tracking-widest">Real-time Insights</p>
-            </div>
-            <div className="space-y-3">
-              <div className="w-12 h-12 bg-rose-50 rounded-2xl flex items-center justify-center text-[#ff69b4] mx-auto shadow-sm">
-                <CheckCircle size={24} fill="currentColor" />
-              </div>
-              <p className="font-black text-[#2D1520] uppercase text-xs tracking-widest">Expert Support</p>
-            </div>
-          </div>
-
-          {/* Poem video block after intro video */}
-          <div className="mt-16 text-center">
-            <div className="inline-block px-4 py-1.5 bg-[#F3EAFC] rounded-full mb-6">
-              <span className="text-[10px] font-black text-[#9079C1] uppercase tracking-[0.2em]">Book Back Cover Poem</span>
-            </div>
-            <h3 className="text-3xl sm:text-4xl font-black text-[#2D1520] mb-4 tracking-tight">
-              Proud to Be a Woman
-            </h3>
-            <p className="text-base text-[#6B5E63] max-w-3xl mx-auto font-medium opacity-80 mb-8 leading-relaxed">
-              A visual poem from Health Sakhi with the client-approved back-cover artwork and voiceover-ready presentation.
-            </p>
-
-            <motion.div
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className={`relative w-full mx-auto rounded-[2.5rem] overflow-hidden shadow-[0_40px_80px_-15px_rgba(0,0,0,0.12)] group border-[10px] border-white ${poemVideoMissing ? 'max-w-[560px]' : 'max-w-[800px]'}`}
-            >
-              <div
-                className={`${poemVideoMissing ? 'aspect-[3/4] bg-[#f4e7f8]' : 'aspect-video bg-slate-900'} relative cursor-pointer`}
-                onClick={() => setIsPlayingPoem(!isPlayingPoem)}
-              >
-                {!poemVideoMissing ? (
-                  <video
-                    src="/Videos/proud-to-be-a-woman.mp4"
-                    poster="/Images/book-back-cover-poem-health-sakhi.png"
-                    className="w-full h-full object-contain"
-                    controls
-                    playsInline
-                    onError={() => setPoemVideoMissing(true)}
-                    ref={(el) => {
-                      if (!el) return;
-                      if (isPlayingPoem) {
-                        el.play().catch(() => {});
-                      } else {
-                        el.pause();
-                      }
-                    }}
+                <div className="flex items-center gap-6">
+                  <img 
+                    src="/Images/WhatsApp Image 2026-05-04 at 6.32.54 PM.jpeg" 
+                    alt="HealthSakhi Logo" 
+                    className="h-20 w-auto drop-shadow-sm mix-blend-multiply contrast-[1.1] brightness-[1.05]" 
                   />
-                ) : (
-                  <div className="w-full h-full relative bg-[#f6ecfb]">
-                    <img
-                      src="/Images/book-back-cover-poem-health-sakhi.png"
-                      alt=""
-                      aria-hidden="true"
-                      className="absolute inset-0 w-full h-full object-cover blur-md scale-110 opacity-40"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-b from-white/15 to-[#2D1520]/10" />
-                    <div className="absolute inset-0 flex items-center justify-center p-4 sm:p-5">
-                      <img
-                        src="/Images/book-back-cover-poem-health-sakhi.png"
-                        alt="Book back cover poem"
-                        className="w-auto h-full max-h-full object-contain rounded-xl shadow-[0_12px_30px_rgba(45,21,32,0.22)] border border-white/60"
-                      />
-                    </div>
-                    <div className="absolute top-4 right-4 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-white/85 text-[#8f3b73] shadow">
-                      Voiceover video coming soon
-                    </div>
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-turmeric-amber/10 border border-turmeric-amber/20">
+                    <span className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.15em] text-turmeric-amber">
+                      For women · By Dr Pratap
+                    </span>
                   </div>
-                )}
+                </div>
+                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-black leading-[1.1] lg:leading-[1.02] text-earth-dark tracking-tighter drop-shadow-sm">
+                  Sakhī means the <br />
+                  <span className="text-turmeric-amber inline-block hover:scale-105 transition-transform cursor-default">closest friend</span> who <br />
+                  understands you
+                </h1>
+                <p className="text-base md:text-lg text-earth-muted font-medium leading-relaxed max-w-2xl">
+                  A wellness app that talks like a sister — in your language, about your real life. Periods, monsoon moods, joint families, fasts, perimenopause. Nothing skipped, nothing translated thin.
+                </p>
               </div>
-            </motion.div>
+
+              <div className="flex flex-wrap items-center gap-4">
+                <Link to="/login" className="px-8 py-3.5 rounded-full text-white font-bold text-sm uppercase tracking-widest bg-turmeric-amber shadow-xl hover:shadow-turmeric-amber/20 hover:scale-105 transition-all">
+                  Meet your sakhi
+                </Link>
+                <button className="group flex items-center gap-3 text-sm font-bold text-earth-dark uppercase tracking-widest hover:text-turmeric-amber transition-all">
+                  <div className="w-9 h-9 rounded-full border-2 border-earth-dark group-hover:border-turmeric-amber flex items-center justify-center transition-all">
+                    <ChevronRight size={18} className="ml-0.5" />
+                  </div>
+                  Watch demo
+                </button>
+              </div>
+
+              <div className="pt-4 border-t border-turmeric-amber/10">
+                <div className="flex items-center gap-3">
+                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-earth-muted">She speaks</p>
+                  <div className="h-[1px] flex-1 bg-gradient-to-r from-turmeric-amber/20 to-transparent"></div>
+                </div>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {[
+                    { name: 'Hindi', script: 'हिंदी' },
+                    { name: 'Marathi', script: 'मराठी' },
+                    { name: 'English', script: 'English' }
+                  ].map((lang) => (
+                    <div key={lang.name} className="flex flex-col items-center gap-0.5 group cursor-default">
+                      <span className="px-3 py-1 rounded-lg text-[10px] font-bold bg-white border border-cream-border text-earth-dark shadow-sm group-hover:border-turmeric-amber transition-all">
+                        {lang.script}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column - Chat Preview */}
+            <div className="relative animate-in fade-in slide-in-from-right-8 duration-1000 delay-200">
+              {/* Background Glow */}
+              <div className="absolute -inset-4 bg-gradient-to-r from-turmeric-amber/20 to-turmeric-deep/10 blur-3xl opacity-30 rounded-full"></div>
+              <ChatPreview />
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ── LEGAL DISCLAIMER ── */}
-      <section className="py-20 bg-[#fff8fb] w-full border-y border-rose-100/60">
-        <div className="w-full px-4 sm:px-[6%] lg:px-[10%]">
-          <div className="max-w-5xl mx-auto">
-            <div className="inline-block px-4 py-1.5 bg-white rounded-full mb-6 border border-rose-100">
-              <span className="text-[10px] font-black text-[#D17B88] uppercase tracking-[0.2em]">Legal Disclaimer</span>
-            </div>
-            <div className="bg-white rounded-[2rem] p-6 sm:p-8 md:p-10 shadow-sm border border-rose-100/60 text-[#5E5058] space-y-4 leading-relaxed">
-              <p>This book is written for information and education as well as for emotional reflection, personal awareness, and relationship understanding. It is not a substitute for professional counselling, couples therapy, psychological treatment, legal advice, or medical care. The stories, names, and characters in every chapter are entirely fictional and created for educational and emotional illustration only. Any resemblance to real persons, living or dead, is purely coincidental.</p>
-              <p>The author, publisher, and distributor expressly disclaim all liability for any harm arising from the use or application of ideas in this book. Every relationship is unique. What resonates for one person may not apply to another. This book is not a guide for making major life decisions. It is an invitation to reflect honestly and kindly on your own inner experience.</p>
-              <p>If you or someone you know is experiencing domestic abuse, emotional violence, severe depression, self-harm, or any situation involving personal safety, please seek qualified professional help immediately. This book is not a crisis resource.</p>
-              <p>Copyright belongs to HealthSakhi and Dr. Pratap Madhukar. All rights reserved. No part of this publication may be reproduced without prior written permission. Contact: HealthSakhiai@hotmail.com | www.healthsakhi.com</p>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      {/* ── PRICING SECTION ── */}
-      <section id="pricing" className="py-16 bg-[#FFF7F8]/30 scroll-mt-20 w-full">
-        <div className="w-full px-4 sm:px-[6%] lg:px-[10%]">
-          <div className="text-center mb-10">
-            {/* ... header content ... */}
-            <div className="inline-block px-4 py-1.5 bg-[#F3EAFC] rounded-full mb-4">
-              <span className="text-[10px] font-black text-[#9079C1] uppercase tracking-[0.2em]">Pricing Plans</span>
+      <section id="what-sakhi-does" className="relative lg:h-screen min-h-[700px] flex items-center py-12 lg:py-0 overflow-hidden">
+        <div className="w-full px-4 sm:px-[6%] lg:px-[8%]">
+          <div className="glass-section p-8 sm:p-12 lg:p-16 relative z-10">
+            <div className="text-center mb-12 lg:mb-16">
+              <p className="text-[10px] sm:text-xs font-black uppercase tracking-[0.3em] text-turmeric-amber mb-4">Not another wellness app</p>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-earth-dark leading-tight">
+                Three things only <br className="hidden sm:block" />
+                your sakhī knows to do
+              </h2>
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold text-[#2D1520] mb-4 tracking-tight">
-              Invest in <span className="text-[#B197B0]">your wellness</span>
-            </h2>
-            <p className="text-[15px] text-[#8E7F84] mx-auto leading-relaxed font-medium">
-              Choose the plan that feels right for your healing journey. No pressure, no rush.
-            </p>
-
-            {/* Billing Toggle */}
-            <div className="mt-8 flex justify-center items-center">
-              <div className="bg-[#E9DDE4] p-1.5 rounded-full flex items-center relative cursor-pointer min-w-[280px]" onClick={() => setIsYearly(!isYearly)}>
-                {/* ... toggle pill ... */}
-                <div
-                  className={`absolute inset-y-1.5 transition-all duration-300 shadow-sm bg-[#B197B0] rounded-full ${isYearly ? 'left-1/2 right-1.5' : 'left-1.5 right-1/2'}`}
-                />
-                <div className={`flex-1 text-center relative z-10 py-2 text-xs font-bold transition-colors duration-300 ${!isYearly ? 'text-white' : 'text-[#8E7F84]'}`}>
-                  Monthly
-                </div>
-                <div className={`flex-1 text-center relative z-10 py-2 text-xs font-bold transition-colors duration-300 ${isYearly ? 'text-white' : 'text-[#8E7F84]'}`}>
-                  Yearly <span className={`text-[9px] px-2 py-0.5 rounded-full ml-1 font-black transition-colors ${isYearly ? 'bg-white/20 text-white' : 'bg-[#FDF0F3] text-[#ff69b4]'}`}>Save 35%</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-end w-full mb-8">
-            {pricingPlans.map((plan, idx) => {
-              const yearlyPrice = plan.duration === '12 Months'
-                ? Math.round(Number(plan.price || 0) * 0.65)
-                : Number(plan.price || 0);
-              const displayPrice = Number(plan.price || 0) === 0
-                ? 'Free'
-                : `₹${isYearly ? yearlyPrice.toLocaleString() : Number(plan.price).toLocaleString()}`;
-              const isPopular = plan.highlightTag === 'Most Popular';
-              const isInactive = plan.status !== 'Active';
-              const isDarkCard = idx === 1;
-
-              return (
-                <motion.div
-                  key={plan.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  className={`${isDarkCard ? 'bg-[#1A0B13] text-white shadow-2xl scale-105 border border-white/5' : 'bg-[#FDF0F3] border border-white/50'} p-8 rounded-[2rem] relative ${isInactive ? 'opacity-70' : ''}`}
+            
+            <motion.div 
+              variants={containerVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.2 }}
+              className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-10"
+            >
+              {differentiators.map((point) => (
+                <motion.div 
+                  key={point.title} 
+                  variants={cardVariants}
+                  className="group rounded-[40px] bg-white/40 p-8 shadow-sm border border-white/60 hover:bg-white/90 hover:border-turmeric-amber/40 hover:shadow-2xl transition-all duration-700 flex flex-col items-center text-center relative overflow-hidden glow-border"
                 >
-                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#B197B0] text-white px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest">
-                    {isInactive ? 'Coming Soon' : (plan.highlightTag || 'Plan')}
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 animate-shimmer pointer-events-none transition-opacity duration-700"></div>
+                  <div className={`w-20 h-20 rounded-[24px] ${point.bgColor} flex items-center justify-center mb-8 group-hover:scale-110 group-hover:rotate-3 transition-all duration-700 shadow-inner`}>
+                    {point.icon === 'MessageSquareText' && <div className={point.iconColor}><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M13 8H7"/><path d="M17 12H7"/></svg></div>}
+                    {point.icon === 'MoonStar' && <div className={point.iconColor}><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/><path d="M19 3v4"/><path d="M21 5h-4"/></svg></div>}
+                    {point.icon === 'HeartHandshake' && <div className={point.iconColor}><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M12 5 9.04 7.96a2.17 2.17 0 0 0 0 3.08v0c.82.82 2.13.85 3 .07l2.07-1.9a2.82 2.82 0 0 1 3.79 0l2.96 2.66"/><path d="m18 15-2-2"/></svg></div>}
                   </div>
-
-                  <h3 className={`text-lg font-black mb-1 ${isDarkCard ? 'text-white' : 'text-[#2D1520]'}`}>{plan.name}</h3>
-                  <p className={`text-[10px] font-medium mb-6 ${isDarkCard ? 'text-white/50' : 'text-[#8E7F84]'}`}>
-                    {plan.shortDescription || `Built for ${plan.name} members.`}
-                  </p>
-
-                  <div className="mb-6 flex items-baseline gap-1">
-                    <span className={`text-3xl font-black ${isDarkCard ? 'text-white' : 'text-[#D17B88]'}`}>{displayPrice}</span>
-                    {displayPrice !== 'Free' && (
-                      <span className={`text-xs font-bold ${isDarkCard ? 'text-white/40' : 'text-[#8E7F84]/60'}`}>/{isYearly ? 'yr' : 'plan'}</span>
-                    )}
-                  </div>
-
-                  <div className="space-y-3 mb-8">
-                    {(plan.features || [
-                      `${plan.videos || 'Limited'} videos access`,
-                      `${plan.books || 'Limited'} books / library`,
-                      `${plan.advisorSessions || '0/month'} advisor sessions`,
-                      plan.aiSakhiChat ? 'AI Sakhi chat enabled' : 'AI Sakhi chat disabled'
-                    ]).map((feat, i) => (
-                      <div key={i} className={`flex items-center gap-2.5 text-xs font-medium ${isDarkCard ? 'text-white/80' : 'text-[#6B5E63]'}`}>
-                        <Check size={12} className={isDarkCard ? 'text-[#B197B0]' : 'text-[#D17B88]'} />
-                        {feat}
-                      </div>
-                    ))}
-                  </div>
-
-                  <button
-                    disabled={isInactive}
-                    onClick={() => {
-                      localStorage.setItem(MEMBER_PLAN_KEY, plan.id);
-                      navigate('/login');
-                    }}
-                    className={`w-full py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${isDarkCard ? 'bg-gradient-to-r from-[#B197B0] to-[#9079C1] text-white shadow-lg hover:scale-105' : 'border-2 border-[#D17B88]/20 text-[#D17B88] hover:bg-[#D17B88] hover:text-white'} ${isInactive ? 'cursor-not-allowed opacity-70 hover:scale-100' : ''}`}
-                  >
-                    {isInactive ? 'Not Available Yet' : (isPopular ? 'Start Premium Journey' : 'Choose Plan')}
-                  </button>
+                  <h3 className="text-xl sm:text-2xl font-black text-earth-dark mb-4 leading-tight tracking-tight">{point.title}</h3>
+                  <p className="text-base text-earth-muted font-medium leading-relaxed opacity-80">{point.description}</p>
                 </motion.div>
-              );
-            })}
-          </div>
-
-          <div className="text-center">
-            {/* <p className="text-[10px] font-medium text-[#8E7F84] opacity-50 italic">No credit card required for Free plan. Cancel anytime. 100% safe.</p> */}
+              ))}
+            </motion.div>
+            
+            {/* Background Decorative Element */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[60%] bg-turmeric-amber/5 blur-[120px] rounded-full -z-10 pointer-events-none"></div>
           </div>
         </div>
       </section>
 
-      {/* ── TESTIMONIALS SECTION (RESPONSIVE) ── */}
-      <section id="testimonials" className="py-12 sm:py-16 md:py-20 lg:py-24 bg-white overflow-hidden scroll-mt-20 w-full">
-        <div className="w-full px-4 sm:px-[6%] lg:px-[10%]">
-          {/* Header */}
-          <div className="text-center mb-8 sm:mb-10 md:mb-12 lg:mb-16">
-            <div className="inline-block px-3 sm:px-4 py-1 sm:py-1.5 bg-[#FDF0F3] rounded-full mb-4 sm:mb-6">
-              <span className="text-[8px] sm:text-[9px] md:text-[10px] font-black text-[#D17B88] uppercase tracking-[0.15em] sm:tracking-[0.2em]">Real Stories</span>
-            </div>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-[#2D1520] mb-4 sm:mb-6 tracking-tight">
-              Women who <span className="text-[#B197B0]">transformed</span>
-            </h2>
-            <p className="text-xs sm:text-sm md:text-base lg:text-lg text-[#8E7F84] max-w-2xl mx-auto leading-relaxed font-medium px-2 sm:px-0">
-              Real stories from real women. Their healing journey became their superpower.
-            </p>
-          </div>
-
-          {/* Testimonial Card */}
-          <div className="max-w-4xl mx-auto px-2 sm:px-0">
-            <div className="relative h-[280px] sm:h-[300px] md:h-[350px] lg:h-[400px]">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={activeTestimonial}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.5 }}
-                  className="grid grid-cols-1 md:grid-cols-2 rounded-2xl sm:rounded-3xl md:rounded-[2.5rem] overflow-hidden shadow-lg md:shadow-xl bg-[#1A0B13] h-full"
-                >
-                  {/* Image Container */}
-                  <div className="h-[140px] sm:h-[160px] md:h-auto overflow-hidden">
-                    <img
-                      src={testimonials[activeTestimonial].img}
-                      alt={testimonials[activeTestimonial].name}
+      <section id="dr-pratap" className="relative lg:h-screen min-h-[700px] flex items-center py-8 lg:py-0 overflow-hidden">
+        <div className="w-full px-4 sm:px-[6%] lg:px-[8%]">
+          <div className="glass-section bg-cream-deep/40 relative z-10" style={{ zoom: 0.85 }}>
+            <div className="p-4 sm:p-5 lg:p-6 grid grid-cols-1 lg:grid-cols-[30fr_70fr] gap-4 lg:gap-8 items-start">
+              
+              {/* Left Column - Doctor Persona */}
+              <div className="flex flex-col items-center text-center">
+                <div className="relative mb-3">
+                  <div className="w-[110px] h-[110px] rounded-full bg-lotus-soft p-1 border-4 border-cream-bg shadow-lg overflow-hidden">
+                    <img 
+                      src="/Images/dr-pratap-portrait.png" 
+                      alt="Dr. Pratap Madhukar" 
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  <div className="p-5 sm:p-6 md:p-8 lg:p-10 flex flex-col justify-center text-white relative">
-                    <div className="text-2xl sm:text-3xl md:text-4xl text-white/20 font-serif mb-3 sm:mb-4">"</div>
-                    <p className="text-xs sm:text-sm md:text-base lg:text-lg font-bold leading-relaxed sm:leading-relaxed md:leading-relaxed mb-4 sm:mb-6 opacity-95 tracking-tight line-clamp-3">
-                      {testimonials[activeTestimonial].quote}
-                    </p>
-                    <div>
-                      <h4 className="text-sm sm:text-base md:text-lg font-black mb-0.5 sm:mb-1 md:mb-1 tracking-tight">{testimonials[activeTestimonial].name}</h4>
-                      <p className="text-[8px] sm:text-[9px] md:text-[10px] text-white/40 font-black uppercase tracking-widest mb-2 sm:mb-3">{testimonials[activeTestimonial].role}</p>
-                      <div className="flex gap-0.5 sm:gap-1 text-[#D17B88]">
-                        {[1, 2, 3, 4, 5].map(i => (
-                          <Star key={i} size={12} className="sm:w-3 sm:h-3 md:w-4 md:h-4" fill="currentColor" />
-                        ))}
-                      </div>
-                    </div>
+                  <div className="absolute bottom-2 right-2 px-3 py-1.5 rounded-full bg-turmeric-amber text-white text-[10px] font-black uppercase tracking-widest shadow-lg">
+                    36 yrs
                   </div>
-                </motion.div>
-              </AnimatePresence>
+                </div>
+                
+                <div className="flex flex-wrap justify-center gap-1.5 mb-4">
+                  {['Harvard', 'PCOD Expert', '28 Books'].map(pill => (
+                    <span key={pill} className="px-3 py-1 rounded-full bg-white border border-cream-border text-[9px] font-black uppercase tracking-widest text-earth-dark shadow-sm">
+                      {pill}
+                    </span>
+                  ))}
+                </div>
+                
+                <div className="space-y-3 w-full">
+                  <Link to="/books" className="block w-full py-2.5 rounded-xl border border-turmeric-amber/30 text-[10px] font-black uppercase tracking-[0.2em] text-turmeric-amber hover:bg-turmeric-amber hover:text-white transition-all">
+                    Read my books
+                  </Link>
+                  <Link to="/story" className="block w-full py-2.5 rounded-xl bg-white/40 text-[10px] font-black uppercase tracking-[0.2em] text-earth-dark hover:bg-white/60 transition-all">
+                    Read my full story
+                  </Link>
+                </div>
+              </div>
+
+              {/* Right Column - The Story */}
+              <div className="space-y-4">
+                <div>
+                  <p className="text-[9px] tracking-[0.3em] uppercase font-black text-turmeric-amber mb-2">YOUR DOCTOR · YOUR SAKHĪ’S CREATOR</p>
+                  <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-earth-dark leading-[1.1] mb-2">Dr. Pratap Madhukar</h2>
+                  <p className="text-xs sm:text-sm text-earth-muted font-bold leading-relaxed max-w-2xl">
+                    MBBS · MSc · PGDip · Family medicine · 36 years · India and abroad · Harvard Medical School certified lifestyle and wellness coach
+                  </p>
+                </div>
+
+                <div className="py-3 border-y border-earth-dark/5 space-y-2">
+                  <p className="text-xl sm:text-2xl font-serif italic text-earth-dark leading-tight">
+                    "स्त्रीणां स्वस्थ्यम् कुटुंब स्वस्थ्यम्"
+                  </p>
+                  <p className="text-sm font-bold uppercase tracking-widest text-turmeric-amber">
+                    A woman's health is her family's health
+                  </p>
+                </div>
+
+                <div className="relative">
+                  <div className="absolute -left-6 top-0 text-5xl text-turmeric-amber/10 font-serif">“</div>
+                  <p className="text-base sm:text-lg text-earth-dark font-medium leading-relaxed italic relative z-10">
+                    In 36 years of practice, I built HealthSakhi for them and for the daughters who shouldn't inherit the same silence.
+                  </p>
+                </div>
+              </div>
             </div>
 
-            {/* Avatar Navigation */}
-            <div className="flex justify-center gap-2 sm:gap-3 mt-6 sm:mt-8 md:mt-10 pb-4 sm:pb-5 flex-wrap">
-              {testimonials.map((t, i) => (
-                <button
-                  key={i}
-                  onClick={() => setActiveTestimonial(i)}
-                  className={`rounded-full border-[2px] sm:border-[3px] overflow-hidden transition-all duration-300 hover:scale-110 w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 ${activeTestimonial === i
-                    ? 'border-[#B197B0] scale-110 shadow-lg'
-                    : 'border-transparent opacity-40 hover:opacity-60'
-                    }`}
-                  aria-label={`View testimonial from ${t.name}`}
-                >
-                  <img src={t.img} className="w-full h-full object-cover" alt={t.name} />
-                </button>
-              ))}
+            {/* Integrated Full-Width Carousel Section */}
+            <div className="pt-6 border-t border-earth-dark/5 overflow-hidden">
+              <div className="px-4 sm:px-6 lg:px-8 mb-1">
+                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2">
+                  <div>
+                    <p className="text-[9px] font-black uppercase tracking-[0.3em] text-turmeric-amber mb-1">COLLECTED WORKS</p>
+                    <h2 className="text-2xl md:text-3xl font-black text-earth-dark">By Dr. Pratap Madhukar</h2>
+                  </div>
+                  <Link to="/library" className="text-[10px] font-black uppercase tracking-[0.2em] text-earth-muted hover:text-turmeric-amber transition-colors flex items-center gap-2 group/lib">
+                    OPEN THE LIBRARY (+22 MORE) <span className="text-lg group-hover/lib:translate-x-1 transition-transform">→</span>
+                  </Link>
+                </div>
+              </div>
+              <div className="relative -mx-6 sm:-mx-10 lg:-mx-12">
+                <InfiniteBookCarousel />
+              </div>
             </div>
+
+            {/* Background Decorative Element */}
+            <div className="absolute top-0 right-0 w-[40%] h-full bg-gradient-to-l from-turmeric-amber/5 to-transparent pointer-events-none -z-10"></div>
           </div>
         </div>
       </section>
 
-      {/* ── FINAL CTA ── */}
-      <section className="relative py-32 px-6 overflow-hidden mt-10">
-        <div className="absolute inset-0 z-0">
-          <img
-            src="/Images/image12.png"
-            className="w-full h-full object-cover"
-            alt="Healing Atmosphere"
-          />
-          <div className="absolute inset-0 bg-[#2D1520]/60 mix-blend-multiply"></div>
+      <section id="a-day-with-sakhi" className="relative lg:h-screen min-h-[800px] flex items-center py-12 lg:py-0 overflow-hidden">
+        <div className="w-full px-4 sm:px-[6%] lg:px-[8%]">
+          <div className="glass-section p-8 sm:p-12 lg:p-16 relative z-10">
+            <div className="text-center mb-12 lg:mb-16">
+              <p className="text-[10px] sm:text-xs font-black uppercase tracking-[0.3em] text-turmeric-amber mb-4">A day with your sakhi</p>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-earth-dark leading-tight">
+                Small moments. All day. <br className="hidden sm:block" />
+                In your pocket.
+              </h2>
+            </div>
+            
+            <motion.div 
+              variants={containerVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.1 }}
+              className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 max-w-5xl mx-auto"
+            >
+              {dayMoments.map((item) => (
+                <motion.div 
+                  key={item.time} 
+                  variants={cardVariants}
+                  className="group rounded-[32px] bg-white/60 p-8 shadow-sm border border-white/40 hover:bg-white/80 transition-all duration-500 relative overflow-hidden"
+                >
+                  <div className="flex justify-between items-start mb-6">
+                    <div>
+                      <p className="text-[10px] font-black tracking-widest text-earth-hint uppercase">{item.label}</p>
+                      <p className="text-2xl font-black text-turmeric-amber mt-1">{item.time}</p>
+                    </div>
+                    <div className="w-10 h-10 rounded-xl bg-turmeric-amber/10 flex items-center justify-center text-turmeric-amber group-hover:scale-110 transition-transform">
+                      {item.icon === 'Sunrise' && <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="M2 12h2"/><path d="m19.07 4.93-1.41-1.41"/><path d="M15.94 11.27a5 5 0 1 0-7.88 0"/><path d="M22 12h-2"/><path d="m19.07 19.07-1.41-1.41"/><path d="M12 22v-2"/><path d="m4.93 19.07 1.41-1.41"/><path d="M20 7h-4"/><path d="M20 11h-4"/><path d="M8 7H4"/><path d="M8 11H4"/></svg>}
+                      {item.icon === 'Sun' && <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41-1.41"/></svg>}
+                      {item.icon === 'Sunset' && <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 13V2"/><path d="m4.93 10.93 1.41 1.41"/><path d="M2 18h2"/><path d="m19.07 10.93-1.41-1.41"/><path d="M22 18h-2"/><path d="m16 18-4 4-4-4"/><path d="M12 22v-4"/></svg>}
+                      {item.icon === 'Moon' && <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>}
+                    </div>
+                  </div>
+                  <p className="text-lg text-earth-dark font-medium leading-relaxed italic">
+                    "{item.text}"
+                  </p>
+                  
+                  {/* Subtle Background Icon */}
+                  <div className="absolute -bottom-6 -right-6 text-9xl text-turmeric-amber/5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {item.icon === 'Sunrise' && "☀"}
+                    {item.icon === 'Sun' && "🔆"}
+                    {item.icon === 'Sunset' && "🌆"}
+                    {item.icon === 'Moon' && "🌙"}
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+            
+            {/* Background Decorative Element */}
+            <div className="absolute bottom-0 right-0 w-[40%] h-[40%] bg-turmeric-amber/5 blur-[100px] rounded-full -z-10 pointer-events-none"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="sakhi-circles" className="relative lg:h-screen min-h-[850px] flex items-center py-12 lg:py-0 overflow-hidden bg-charcoal text-white">
+        <div className="w-full px-4 sm:px-[6%] lg:px-[8%]">
+          <div className="max-w-6xl mx-auto relative z-10">
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.2fr] gap-12 lg:gap-20 items-center">
+              
+              {/* Left Side - Context */}
+              <div className="space-y-8 text-center lg:text-left">
+                <div className="space-y-4">
+                  <p className="text-[10px] sm:text-xs font-black uppercase tracking-[0.3em] text-turmeric-amber">SAKHI CIRCLES — NEW</p>
+                  <h2 className="text-4xl sm:text-5xl lg:text-7xl font-black leading-[1.1] tracking-tighter">
+                    Six women. <br />
+                    One thing you can't <br className="hidden lg:block" />
+                    say out loud.
+                  </h2>
+                </div>
+                <p className="text-lg sm:text-xl text-white/70 font-medium leading-relaxed max-w-xl mx-auto lg:mx-0">
+                  Anonymous, gently moderated, six women only. The circle that meets you where your friends and family can't.
+                </p>
+                <button className="px-10 py-4 rounded-full bg-turmeric-amber text-white font-black uppercase tracking-[0.2em] shadow-2xl shadow-turmeric-amber/40 hover:scale-105 active:scale-95 transition-all">
+                  Join a circle
+                </button>
+              </div>
+
+              {/* Right Side - Circles Grid */}
+              <motion.div 
+                variants={containerVariants}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, amount: 0.1 }}
+                className="grid grid-cols-1 sm:grid-cols-2 gap-6 lg:gap-8"
+              >
+                {circles.map((circle) => (
+                  <motion.div 
+                    key={circle.title} 
+                    variants={cardVariants}
+                    className="group p-8 rounded-[40px] bg-white/5 border border-white/10 backdrop-blur-md hover:bg-white/15 hover:border-turmeric-amber/40 transition-all duration-700 relative overflow-hidden glow-border"
+                  >
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-10 animate-shimmer pointer-events-none"></div>
+                    <h3 className="text-2xl font-black mb-3 tracking-tight group-hover:text-turmeric-amber transition-colors">{circle.title}</h3>
+                    <p className="text-sm text-white/50 font-medium mb-10">{circle.subtitle}</p>
+                    
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-end">
+                        <span className="text-[11px] font-black uppercase tracking-widest text-turmeric-amber">{circle.capacity}</span>
+                        <span className="text-[10px] font-medium text-white/20 uppercase">Availability</span>
+                      </div>
+                      <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden p-[1px]">
+                        <div 
+                          className="h-full bg-gradient-to-r from-turmeric-amber to-sindoor-rose rounded-full transition-all duration-1000 delay-300 shadow-[0_0_10px_rgba(186,117,23,0.5)]"
+                          style={{ width: `${circle.progress}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </motion.div>
+            </div>
+          </div>
         </div>
 
-        <div className="max-w-4xl mx-auto text-center relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <div className="inline-block px-5 py-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full mb-8">
-              <span className="text-[10px] font-black text-white uppercase tracking-[0.3em]">Begin Today</span>
+        {/* Sacred Space Glows */}
+        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-turmeric-amber/10 blur-[150px] rounded-full pointer-events-none"></div>
+        <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-lotus-deep/5 blur-[120px] rounded-full pointer-events-none"></div>
+      </section>
+
+      <section id="testimonials" className="relative lg:h-screen min-h-[700px] flex items-center py-12 lg:py-0 overflow-hidden">
+        <div className="w-full px-4 sm:px-[6%] lg:px-[8%]">
+          <div className="glass-section p-8 sm:p-12 lg:p-16 relative z-10">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black mb-12 lg:mb-16 text-earth-dark text-center">Voices from women</h2>
+            
+            <motion.div 
+              variants={containerVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.1 }}
+              className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12"
+            >
+              {testimonials.map((item, idx) => (
+                <motion.div 
+                  key={idx} 
+                  variants={cardVariants}
+                  className="flex flex-col justify-center rounded-[40px] bg-white/60 p-10 sm:p-12 border border-white/40 shadow-lg relative group hover:bg-white/80 transition-all duration-500"
+                >
+                  <div className="absolute top-8 left-8 text-6xl text-turmeric-amber/20 font-serif group-hover:scale-110 transition-transform duration-500">“</div>
+                  <div className="relative z-10">
+                    <p className="text-xl sm:text-2xl md:text-3xl text-earth-dark italic font-serif leading-relaxed mb-10">
+                      {item.text}
+                    </p>
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-[1px] bg-turmeric-amber/30"></div>
+                      <p className="text-sm sm:text-base font-black text-turmeric-amber uppercase tracking-widest">
+                        — {item.author}, {item.location}
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+            
+            {/* Background Decorative Element */}
+            <div className="absolute top-0 right-0 w-[30%] h-[30%] bg-turmeric-amber/5 blur-[80px] rounded-full -z-10 pointer-events-none"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="pricing" className="relative lg:h-screen min-h-[600px] flex items-center justify-center py-20 lg:py-0 overflow-hidden bg-turmeric-amber text-white">
+        <div className="w-full px-4 sm:px-[6%] lg:px-[8%] relative z-10">
+          <div className="max-w-4xl mx-auto text-center space-y-8 sm:space-y-12">
+            
+            <div className="space-y-4 sm:space-y-6">
+              <h2 className="text-4xl sm:text-6xl md:text-8xl font-black leading-tight tracking-tighter">
+                Your sakhī <br />
+                is waiting
+              </h2>
+              <p className="text-lg sm:text-xl md:text-2xl font-medium text-white/80 max-w-3xl mx-auto leading-relaxed">
+                In Hindi, Marathi, Tamil, Telugu, Bengali, Arabic or English. <br className="hidden sm:block" />
+                On your phone. From tomorrow morning.
+              </p>
             </div>
 
-            <h2 className="text-4xl md:text-7xl font-black text-white mb-8 tracking-tighter leading-none">
-              YOU DESERVE <br />
-              <span className="opacity-90">TO HEAL</span>
-            </h2>
-
-            <p className="text-base md:text-lg text-white/90 mb-12 max-w-2xl mx-auto leading-relaxed font-medium">
-              Join 50,000+ women who chose themselves. Your healing journey begins with one small step — and we'll walk every step with you.
-            </p>
-
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-              <Link to="/login" className="w-full sm:w-auto px-8 py-5 bg-gradient-to-r from-[#B197B0] to-[#9079C1] text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl flex items-center justify-center gap-3 hover:scale-105 transition-all">
-                <Heart size={16} fill="currentColor" />
-                Start My Free Journey
+            <div className="space-y-6 sm:space-y-8">
+              <Link to="/login" className="inline-block px-8 sm:px-16 py-5 sm:py-6 rounded-full bg-white text-turmeric-amber font-black uppercase tracking-[0.2em] shadow-2xl hover:scale-105 active:scale-95 transition-all text-sm sm:text-base">
+                Meet your sakhī — free for 30 days
               </Link>
-              <button className="w-full sm:w-auto px-10 py-5 bg-white/10 backdrop-blur-md border border-white/30 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-white/20 transition-all">
-                Learn More
-              </button>
+              
+              <div className="space-y-2">
+                <p className="text-xs sm:text-sm font-black uppercase tracking-[0.15em] text-white/60">
+                  Then ₹99/month or AED 14/month
+                </p>
+                <p className="text-[10px] sm:text-xs font-medium text-white/40 uppercase tracking-widest">
+                  No ads. Ever. Cancel in two taps.
+                </p>
+              </div>
             </div>
 
-            <div className="flex flex-wrap justify-center gap-8 md:gap-12">
-              <div className="flex items-center gap-2 text-[10px] font-black text-white/70 uppercase tracking-widest">
-                <ShieldCheck size={16} className="text-[#ff69b4]" />
-                100% Safe & Private
+            <div className="pt-12 sm:pt-20 flex flex-col items-center gap-4">
+              <div className="flex items-center gap-3">
+                <span className="text-sm sm:text-base font-black uppercase tracking-[0.3em]">Your HealthSakhi</span>
+                <Heart size={20} fill="currentColor" className="text-sindoor-rose animate-pulse" />
               </div>
-              <div className="flex items-center gap-2 text-[10px] font-black text-white/70 uppercase tracking-widest">
-                <Users size={16} className="text-[#ff69b4]" />
-                Certified Advisors
-              </div>
-              <div className="flex items-center gap-2 text-[10px] font-black text-white/70 uppercase tracking-widest">
-                <Activity size={16} className="text-[#ff69b4]" />
-                Mobile Friendly
-              </div>
+              <div className="w-24 h-[1px] bg-white/20"></div>
             </div>
-          </motion.div>
+
+          </div>
+        </div>
+
+        {/* Decorative Circles */}
+        <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
+          <div className="absolute -top-24 -left-24 w-[500px] h-[500px] border-[0.5px] border-white rounded-full"></div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] border-[0.5px] border-white rounded-full"></div>
+          <div className="absolute -bottom-48 -right-48 w-[600px] h-[600px] border-[0.5px] border-white rounded-full"></div>
         </div>
       </section>
     </div>
@@ -950,4 +608,3 @@ const LandingPage = () => {
 };
 
 export default LandingPage;
-

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { Heart, Menu, X, ArrowRight, Mail, Phone, MapPin, Globe, Send, Share2 } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const LandingLayout = () => {
@@ -20,26 +20,21 @@ const LandingLayout = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [isMobileMenuOpen]);
 
-  const handleNavClick = (e, id) => {
+  const handleNavClick = (e, sectionId) => {
     setIsMobileMenuOpen(false);
 
-    if (id === 'home') {
+    if (sectionId === 'home') {
       e.preventDefault();
       window.scrollTo({ top: 0, behavior: 'smooth' });
       window.history.pushState(null, '', '/');
       return;
     }
 
-    if (id === 'demo') {
-      // Just let the Link or a tag handle navigation to the new page
-      return;
-    }
-
-    const element = document.getElementById(id);
+    const element = document.getElementById(sectionId);
     if (element) {
       e.preventDefault();
       element.scrollIntoView({ behavior: 'smooth' });
-      window.history.pushState(null, '', `#${id}`);
+      window.history.pushState(null, '', `#${sectionId}`);
     } else if (location.pathname !== '/') {
       // Allow browser to handle navigation to main page + hash
     }
@@ -47,38 +42,44 @@ const LandingLayout = () => {
 
   const navLinks = [
     { id: 'home', name: 'Home' },
-    { id: 'features', name: 'Features' },
-    { id: 'how-it-works', name: 'Journey' },
-    { id: 'demo', name: 'Demo' },
-    { id: 'pricing', name: 'Pricing' },
-    { id: 'testimonials', name: 'Stories' },
+    { id: 'what-sakhi-does', name: 'What Sakhi Does' },
+    { id: 'dr-pratap', name: 'Dr Pratap' },
+    { id: 'a-day-with-sakhi', name: 'Day with Sakhi' },
+    { id: 'sakhi-circles', name: 'Sakhi Circles' },
+    { id: 'testimonials', name: 'Voices' },
+    
+    { id: 'pricing', name: 'Pricing', sectionId: 'pricing' },
   ];
 
   return (
-    <div className="min-h-screen flex flex-col w-full bg-[#FFF7F8] overflow-x-hidden font-sans">
+    <div className="min-h-screen flex flex-col w-full bg-transparent overflow-x-hidden font-sans text-earth-dark">
       {/* ... Navbar (omitted for brevity in instruction, but kept in code) ... */}
       {/* Responsive Navbar */}
       <nav
-        className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 ${isScrolled ? 'h-14 sm:h-16 md:h-16 lg:h-16 bg-white/90 backdrop-blur-2xl border-b shadow-md' : 'h-16 sm:h-20 md:h-20 lg:h-20 bg-transparent'
+        className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 ${isScrolled ? 'h-16 sm:h-20 md:h-20 lg:h-20 bg-white/90 backdrop-blur-2xl border-b shadow-md' : 'h-20 sm:h-24 md:h-24 lg:h-24 bg-transparent'
           }`}
-        style={{ borderColor: isScrolled ? '#F3E7ED' : 'transparent' }}
+        style={{ borderColor: isScrolled ? 'var(--color-turmeric-amber)20' : 'transparent' }}
       >
         <div className="w-full h-full flex items-center justify-between gap-2 px-4 sm:px-[5%] lg:px-[8%]">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-1.5 sm:gap-2.5 group shrink-0">
-            <div className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 flex items-center justify-center overflow-hidden">
-              <img src="/Images/logo.png" alt="HealthSakhi Logo" className="w-full h-full object-contain" />
+            <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 flex items-center justify-center overflow-hidden">
+              <img
+                src="/Images/WhatsApp Image 2026-05-04 at 6.32.54 PM.jpeg"
+                alt="HealthSakhi Logo"
+                className="w-full h-full object-contain mix-blend-multiply contrast-[1.1] brightness-[1.05]"
+              />
             </div>
-            <span className="text-base sm:text-lg md:text-xl font-bold tracking-tight text-[#2D1520] group-hover:opacity-80 transition-opacity hidden sm:block">HealthSakhi</span>
+            <span className="text-lg sm:text-xl md:text-2xl font-bold tracking-tight text-earth-dark group-hover:opacity-80 transition-opacity hidden sm:block">HealthSakhi</span>
           </Link>
 
           <div className="hidden lg:flex items-center gap-6 xl:gap-10 flex-1 justify-center">
             {navLinks.map((link) => (
               <Link
                 key={link.id}
-                to={link.id === 'demo' ? '/how-to-use' : `/#${link.id}`}
-                onClick={(e) => handleNavClick(e, link.id)}
-                className="text-xs xl:text-sm font-bold text-[#6B5E63] hover:text-[#A98DA4] transition-colors tracking-tight whitespace-nowrap"
+                to={`/#${link.id}`}
+                onClick={(e) => handleNavClick(e, link.sectionId || link.id)}
+                className="text-xs xl:text-sm font-bold text-earth-muted hover:text-turmeric-amber transition-colors tracking-tight whitespace-nowrap"
               >
                 {link.name}
               </Link>
@@ -90,9 +91,9 @@ const LandingLayout = () => {
             {navLinks.slice(0, 4).map((link) => (
               <Link
                 key={link.id}
-                to={link.id === 'demo' ? '/how-to-use' : `/#${link.id}`}
-                onClick={(e) => handleNavClick(e, link.id)}
-                className="text-xs font-bold text-[#6B5E63] hover:text-[#A98DA4] transition-colors tracking-tight"
+                to={`/#${link.id}`}
+                onClick={(e) => handleNavClick(e, link.sectionId || link.id)}
+                className="text-xs font-bold text-earth-muted hover:text-turmeric-amber transition-colors tracking-tight"
               >
                 {link.name}
               </Link>
@@ -104,17 +105,16 @@ const LandingLayout = () => {
             {/* Responsive Button */}
             <Link
               to="/login"
-              className="px-3 sm:px-4 md:px-6 py-1.5 sm:py-2 md:py-2.5 text-white text-[10px] sm:text-xs md:text-sm font-bold rounded-full shadow-lg hover:scale-105 active:scale-95 transition-all shadow-[#B197B0]/20 whitespace-nowrap"
-              style={{ background: 'linear-gradient(135deg, rgb(216, 167, 177), rgb(156, 123, 184))' }}
+              className="px-3 sm:px-4 md:px-6 py-1.5 sm:py-2 md:py-2.5 text-white text-[10px] sm:text-xs md:text-sm font-medium rounded-full bg-turmeric-amber shadow-lg hover:scale-105 active:scale-95 transition-all whitespace-nowrap"
             >
-              <span className="hidden sm:inline">Start Your Journey</span>
-              <span className="sm:hidden">Login</span>
+              <span className="hidden sm:inline">Meet your sakhi</span>
+              <span className="sm:hidden">Meet sakhi</span>
             </Link>
 
             {/* Mobile/Tablet Menu Button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="lg:hidden p-1.5 sm:p-2 text-[#2D1520] hover:opacity-70 transition-opacity"
+              className="lg:hidden p-1.5 sm:p-2 text-earth-dark hover:opacity-70 transition-opacity"
               aria-label="Toggle menu"
             >
               {isMobileMenuOpen ? <X size={24} className="sm:w-6 sm:h-6" /> : <Menu size={24} className="sm:w-6 sm:h-6" />}
@@ -148,9 +148,9 @@ const LandingLayout = () => {
                 {navLinks.map((link) => (
                   <Link
                     key={link.id}
-                    to={link.id === 'demo' ? '/how-to-use' : `/#${link.id}`}
-                    onClick={(e) => handleNavClick(e, link.id)}
-                    className="block px-4 py-3 sm:py-4 bg-gradient-to-r from-rose-50/50 to-purple-50/50 rounded-xl text-sm sm:text-base font-bold text-[#2D1520] hover:from-rose-100 hover:to-purple-100 transition-all active:scale-95"
+                    to={`/#${link.id}`}
+                    onClick={(e) => handleNavClick(e, link.sectionId || link.id)}
+                    className="block px-4 py-3 sm:py-4 bg-gradient-to-r from-turmeric-soft/50 to-lotus-soft/50 rounded-xl text-sm sm:text-base font-medium text-earth-dark hover:from-turmeric-soft hover:to-lotus-soft transition-all active:scale-95"
                   >
                     {link.name}
                   </Link>
@@ -158,9 +158,9 @@ const LandingLayout = () => {
                 <Link
                   to="/login"
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="block px-4 py-3 sm:py-4 bg-gradient-to-r from-[#ff69b4] to-[#9C7BB8] text-white rounded-xl text-sm sm:text-base font-bold text-center hover:shadow-lg transition-all active:scale-95"
+                  className="block px-4 py-3 sm:py-4 bg-turmeric-amber text-white rounded-xl text-sm sm:text-base font-medium text-center hover:shadow-lg transition-all active:scale-95"
                 >
-                  Portal Login
+                  Meet your sakhi
                 </Link>
               </div>
             </motion.div>
@@ -168,88 +168,30 @@ const LandingLayout = () => {
         )}
       </AnimatePresence>
 
-      <main className="flex-1 pt-16 sm:pt-20 md:pt-20 lg:pt-20">
+      <main className="flex-1 pt-20 sm:pt-24 md:pt-24 lg:pt-24">
         <Outlet />
       </main>
 
       {/* Responsive Premium Footer */}
-      <footer className="bg-[#120911] pt-12 sm:pt-16 md:pt-20 lg:pt-24 pb-6 sm:pb-8 md:pb-10 text-white overflow-hidden w-full">
+      <footer className="bg-charcoal py-8 sm:py-10 text-white w-full border-t border-white/5">
         <div className="w-full px-4 sm:px-[5%] lg:px-[8%]">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-8 sm:gap-10 md:gap-6 lg:gap-8 mb-12 md:mb-20">
-            {/* Column 1: Brand */}
-            <div className="sm:col-span-2 md:col-span-4 space-y-6">
-              <div className="flex items-center gap-3">
-                <div className="w-9 sm:w-10 md:w-10 h-9 sm:h-10 md:h-10 flex items-center justify-center overflow-hidden">
-                  <img src="/Images/logo.png" alt="HealthSakhi Logo" className="w-full h-full object-contain" />
-                </div>
-                <span className="text-lg sm:text-xl md:text-2xl font-black tracking-tighter text-white">HealthSakhi</span>
-              </div>
-              <p className="text-white/40 text-xs sm:text-sm md:text-[14px] leading-relaxed font-bold max-w-xs">
-                India's most trusted women wellness portal. A safe, beautiful, and healing space built with love.
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6 sm:gap-8">
+            {/* Left Line */}
+            <div className="text-center md:text-left">
+              <p className="text-[10px] sm:text-[11px] font-bold text-white/40 uppercase tracking-[0.2em]">
+                © 2026 HealthSakhi · Dr Pratap · Bangalore & Fujairah
               </p>
-              <div className="flex gap-3 sm:gap-4">
-                {[Share2, Send, Globe, Mail].map((Icon, i) => (
-                  <a key={i} href="#" className="w-8 sm:w-9 md:w-10 h-8 sm:h-9 md:h-10 rounded-full border border-white/10 flex items-center justify-center text-white/50 hover:bg-[#B197B0] hover:text-white transition-all duration-300">
-                    <Icon size={14} className="sm:w-4 sm:h-4 md:w-[16px] md:h-[16px]" />
-                  </a>
-                ))}
-              </div>
             </div>
 
-            {/* Column 2: Quick Links */}
-            <div className="sm:col-span-1 md:col-span-2 space-y-4 sm:space-y-8">
-              <h4 className="text-[9px] sm:text-[10px] md:text-[11px] font-black uppercase tracking-[0.3em] text-white/30">Quick Links</h4>
-              <ul className="space-y-2 sm:space-y-4 text-xs sm:text-sm md:text-[14px] font-bold text-white/50">
-                {navLinks.map(link => (
-                  <li key={link.id}><a href={`#${link.id}`} onClick={(e) => handleNavClick(e, link.id)} className="hover:text-[#B197B0] transition-colors">{link.name}</a></li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Column 3: Contact */}
-            <div className="sm:col-span-1 md:col-span-3 space-y-4 sm:space-y-8">
-              <h4 className="text-[9px] sm:text-[10px] md:text-[11px] font-black uppercase tracking-[0.3em] text-white/30">Contact</h4>
-              <ul className="space-y-3 sm:space-y-6">
-                <li className="flex gap-2 sm:gap-3 text-xs sm:text-sm md:text-[14px] font-bold text-white/50">
-                  <MapPin size={16} className="sm:w-5 sm:h-5 md:w-[18px] md:h-[18px] shrink-0 text-[#B197B0]" />
-                  <span>Koramangala, Bangalore <br /> Karnataka, India 560034</span>
-                </li>
-                <li className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm md:text-[14px] font-bold text-white/50">
-                  <Phone size={16} className="sm:w-5 sm:h-5 md:w-[18px] md:h-[18px] shrink-0 text-[#B197B0]" />
-                  <span>+91 800-123-4567</span>
-                </li>
-                <li className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm md:text-[14px] font-bold text-white/50">
-                  <Mail size={16} className="sm:w-5 sm:h-5 md:w-[18px] md:h-[18px] shrink-0 text-[#B197B0]" />
-                  <span>care@healthsakhi.in</span>
-                </li>
-              </ul>
-            </div>
-
-            {/* Column 4: Newsletter */}
-            <div className="sm:col-span-2 md:col-span-3 space-y-4 sm:space-y-6">
-              <h4 className="text-[9px] sm:text-[10px] md:text-[11px] font-black uppercase tracking-[0.3em] text-white/30">Daily Healing Tips</h4>
-              <p className="text-xs sm:text-sm md:text-[14px] font-medium text-white/40 leading-relaxed">
-                Get gentle wellness tips, healing insights, and love in your inbox.
-              </p>
-              <div className="space-y-2 sm:space-y-3">
-                <input
-                  type="email"
-                  placeholder="your@email.com"
-                  className="w-full h-10 sm:h-12 md:h-14 px-3 sm:px-4 md:px-6 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl md:rounded-2xl outline-none focus:border-[#B197B0] text-xs sm:text-sm font-bold text-white placeholder:text-white/20"
-                />
-                <button className="w-full h-10 sm:h-12 md:h-14 bg-gradient-to-r from-[#B197B0] to-[#9079C1] text-white rounded-lg sm:rounded-xl md:rounded-2xl font-black text-[8px] sm:text-xs md:text-xs uppercase tracking-widest shadow-lg hover:scale-[1.02] transition-all">
-                  Subscribe
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="pt-6 sm:pt-8 md:pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 sm:gap-6">
-            <p className="text-[8px] sm:text-[9px] md:text-[11px] font-bold text-white/20 uppercase tracking-widest text-center md:text-left">© 2026 HealthSakhi. Made with love for every woman.</p>
-            <div className="flex gap-4 sm:gap-6 md:gap-8 text-[8px] sm:text-[9px] md:text-[11px] font-bold text-white/30 uppercase tracking-widest text-center md:text-left">
-              <span className="hover:text-white cursor-pointer transition-colors">Privacy Policy</span>
-              <span className="hover:text-white cursor-pointer transition-colors">Terms of Use</span>
-              <span className="hover:text-white cursor-pointer transition-colors">Support</span>
+            {/* Right Line */}
+            <div className="flex flex-wrap justify-center md:justify-end items-center gap-x-6 gap-y-3 text-[10px] sm:text-[11px] font-bold text-white/60 uppercase tracking-[0.15em]">
+              <Link to="/privacy" className="hover:text-white transition-colors">Privacy</Link>
+              <Link to="/terms" className="hover:text-white transition-colors">Terms</Link>
+              <Link to="/contact" className="hover:text-white transition-colors">Contact</Link>
+              <span className="text-white/30 hidden sm:inline">|</span>
+              <a href="tel:+918001234567" className="text-turmeric-amber hover:text-white transition-colors">
+                +91 800-123-4567
+              </a>
             </div>
           </div>
         </div>
