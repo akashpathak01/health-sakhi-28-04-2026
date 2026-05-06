@@ -56,21 +56,21 @@ const LandingLayout = () => {
       {/* ... Navbar (omitted for brevity in instruction, but kept in code) ... */}
       {/* Responsive Navbar */}
       <nav
-        className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 ${isScrolled ? 'h-16 sm:h-20 md:h-20 lg:h-20 bg-white/90 backdrop-blur-2xl border-b shadow-md' : 'h-20 sm:h-24 md:h-24 lg:h-24 bg-transparent'
+        className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 ${isScrolled ? 'h-20 sm:h-24 bg-white/90 backdrop-blur-2xl border-b shadow-md' : 'h-24 sm:h-28 bg-transparent'
           }`}
         style={{ borderColor: isScrolled ? 'var(--color-turmeric-amber)20' : 'transparent' }}
       >
         <div className="w-full h-full flex items-center justify-between gap-2 px-4 sm:px-[5%] lg:px-[8%]">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-1.5 sm:gap-2.5 group shrink-0">
-            <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 flex items-center justify-center overflow-hidden">
+          <Link to="/" className="flex items-center gap-2 sm:gap-4 group shrink-0">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 flex items-center justify-center overflow-hidden">
               <img
                 src="/Images/WhatsApp Image 2026-05-04 at 6.32.54 PM.jpeg"
                 alt="HealthSakhi Logo"
                 className="w-full h-full object-contain mix-blend-multiply contrast-[1.1] brightness-[1.05]"
               />
             </div>
-            <span className="text-lg sm:text-xl md:text-2xl font-bold tracking-tight text-earth-dark group-hover:opacity-80 transition-opacity hidden sm:block">HealthSakhi</span>
+            <span className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-earth-dark group-hover:opacity-80 transition-opacity hidden sm:block">HealthSakhi</span>
           </Link>
 
           <div className="hidden lg:flex items-center gap-6 xl:gap-10 flex-1 justify-center">
@@ -79,7 +79,7 @@ const LandingLayout = () => {
                 key={link.id}
                 to={`/#${link.id}`}
                 onClick={(e) => handleNavClick(e, link.sectionId || link.id)}
-                className="text-xs xl:text-sm font-bold text-earth-muted hover:text-turmeric-amber transition-colors tracking-tight whitespace-nowrap"
+                className="text-sm xl:text-base font-bold text-earth-muted hover:text-turmeric-amber transition-colors tracking-tight whitespace-nowrap"
               >
                 {link.name}
               </Link>
@@ -102,14 +102,7 @@ const LandingLayout = () => {
 
           {/* Right Side - Button & Menu */}
           <div className="flex items-center gap-2 sm:gap-3 md:gap-4 justify-end">
-            {/* Responsive Button */}
-            <Link
-              to="/login"
-              className="px-3 sm:px-4 md:px-6 py-1.5 sm:py-2 md:py-2.5 text-white text-[10px] sm:text-xs md:text-sm font-medium rounded-full bg-turmeric-amber shadow-lg hover:scale-105 active:scale-95 transition-all whitespace-nowrap"
-            >
-              <span className="hidden sm:inline">Meet your sakhi</span>
-              <span className="sm:hidden">Meet sakhi</span>
-            </Link>
+            {/* Responsive Button Removed based on feedback */}
 
             {/* Mobile/Tablet Menu Button */}
             <button
@@ -155,20 +148,13 @@ const LandingLayout = () => {
                     {link.name}
                   </Link>
                 ))}
-                <Link
-                  to="/login"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="block px-4 py-3 sm:py-4 bg-turmeric-amber text-white rounded-xl text-sm sm:text-base font-medium text-center hover:shadow-lg transition-all active:scale-95"
-                >
-                  Meet your sakhi
-                </Link>
-              </div>
+                {/* Mobile login button removed based on feedback */}              </div>
             </motion.div>
           </>
         )}
       </AnimatePresence>
 
-      <main className="flex-1 pt-20 sm:pt-24 md:pt-24 lg:pt-24">
+      <main className="flex-1 pt-24 sm:pt-28 md:pt-28 lg:pt-28">
         <Outlet />
       </main>
 

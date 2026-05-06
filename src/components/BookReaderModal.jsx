@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Document, Page, pdfjs } from 'react-pdf';
+import { Headphones, Pause, Play, Square } from 'lucide-react';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 
@@ -11,11 +12,16 @@ const BookReaderModal = ({ selectedBook, onClose }) => {
   const [pageNumber, setPageNumber] = useState(1);
   const [direction, setDirection] = useState(0);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
 
   React.useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.speechSynthesis.cancel();
+    };
   }, []);
 
   function onDocumentLoadSuccess({ numPages }) {
@@ -36,6 +42,42 @@ const BookReaderModal = ({ selectedBook, onClose }) => {
     setPageNumber(p => Math.max(1, p - 2));
   };
 
+  const handleListen = (e) => {
+    if (e) e.stopPropagation();
+    if (isSpeaking && !isPaused) {
+      window.speechSynthesis.pause();
+      setIsPaused(true);
+    } else if (isSpeaking && isPaused) {
+      window.speechSynthesis.resume();
+      setIsPaused(false);
+    } else {
+      // Start speaking
+      const textToSpeak = selectedBook.desc || "Welcome to HealthSakhi Library. This is a sample audio reading. Let's begin the journey of wellness.";
+      const utterance = new SpeechSynthesisUtterance(textToSpeak);
+      utterance.rate = 0.9;
+      utterance.onend = () => {
+        setIsSpeaking(false);
+        setIsPaused(false);
+      };
+      window.speechSynthesis.speak(utterance);
+      setIsSpeaking(true);
+      setIsPaused(false);
+    }
+  };
+
+  const stopAudio = (e) => {
+    if (e) e.stopPropagation();
+    window.speechSynthesis.cancel();
+    setIsSpeaking(false);
+    setIsPaused(false);
+  };
+
+  const handleClose = (e) => {
+    if (e) e.stopPropagation();
+    window.speechSynthesis.cancel();
+    onClose();
+  };
+
   if (!selectedBook) return null;
 
   return (
@@ -50,7 +92,7 @@ const BookReaderModal = ({ selectedBook, onClose }) => {
         style={{
           background: `radial-gradient(circle at center, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.9) 100%)`
         }}
-        onClick={onClose}
+        onClick={handleClose}
       />
 
       <motion.div
@@ -58,9 +100,28 @@ const BookReaderModal = ({ selectedBook, onClose }) => {
         animate={{ scaleX: 1, opacity: 1 }}
         exit={{ scaleX: 0, opacity: 0 }}
         transition={{ duration: 0.5, ease: "circOut" }}
-        className="relative max-w-7xl w-full flex justify-center items-center h-[85vh] sm:h-[90vh] lg:h-[90vh]"
+        className="relative max-w-7xl w-full flex justify-center items-center h-[85vh] sm:h-[90vh] lg:h-[90vh] mt-16"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Audio Control Floating Button */}
+        <div className="absolute -top-20 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-white/10 backdrop-blur-md px-6 py-3 rounded-full border border-white/20 shadow-2xl z-50 transition-all duration-300">
+          <button 
+            onClick={handleListen}
+            className="flex items-center gap-2 text-white font-bold text-sm tracking-widest uppercase hover:text-[#BA7517] transition-colors"
+          >
+            {isSpeaking && !isPaused ? <Pause size={18} /> : (isSpeaking && isPaused ? <Play size={18} /> : <Headphones size={18} />)}
+            {isSpeaking && !isPaused ? 'Pause Audio' : (isSpeaking && isPaused ? 'Resume Audio' : 'Listen to Book')}
+          </button>
+          {isSpeaking && (
+            <button 
+              onClick={stopAudio}
+              className="w-8 h-8 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500 hover:text-white flex items-center justify-center transition-colors"
+            >
+              <Square size={14} />
+            </button>
+          )}
+        </div>
+
         {selectedBook.bookFile ? (
           <div 
             className="relative flex shadow-[0_0_60px_rgba(0,0,0,0.8)] rounded-md transition-transform duration-300" 
@@ -70,7 +131,7 @@ const BookReaderModal = ({ selectedBook, onClose }) => {
             }}
           >
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="absolute -top-4 -right-4 w-10 h-10 bg-red-500 hover:bg-red-600 border-2 border-white shadow-xl rounded-full flex items-center justify-center text-white text-xl font-bold transition-all z-50"
             >
               ×
@@ -181,7 +242,7 @@ const BookReaderModal = ({ selectedBook, onClose }) => {
         ) : (
           <div className="w-[800px] h-[500px] bg-white rounded-md flex items-center justify-center p-8 text-center shadow-2xl relative">
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="absolute top-4 right-4 w-8 h-8 bg-black/5 hover:bg-black/10 rounded-full flex items-center justify-center text-black/50 transition-all z-50"
             >
               ×

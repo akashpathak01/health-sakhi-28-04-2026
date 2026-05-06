@@ -39,6 +39,14 @@
   --color-plum-muted:       var(--color-earth-muted);
   --color-plum-soft:        var(--color-cream-bg);
   --color-plum-border:      var(--color-cream-border);
+
+  /* Health Palette */
+  --color-health-green:     #6BCB77;
+  --color-health-pink:      #FFB5B5;
+  --color-health-white:     #FFFFFF;
+  --color-health-dark:      #222222;
+  --color-health-gray:      #666666;
+  --color-health-soft:      #F9FBF9;
 }
 
 :root {
@@ -102,6 +110,7 @@
 body {
   margin: 0;
   overflow-x: hidden;
+  background-color: var(--color-cream-bg);
   background-image: url('/Images/Gemini_Generated_Image_3spsij3spsij3sps.png');
   background-attachment: fixed;
   background-size: cover;
@@ -117,7 +126,7 @@ body::before {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(251, 247, 239, 0.85); /* Semi-transparent warm cream overlay */
+  background: rgba(251, 247, 239, 0.9); /* Subtle overlay for better text contrast */
   z-index: -1;
   pointer-events: none;
 }

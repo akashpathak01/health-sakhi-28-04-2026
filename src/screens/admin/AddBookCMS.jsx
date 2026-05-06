@@ -72,8 +72,27 @@ const AddBookCMS = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Submitting Book:', formData);
-    alert('Book added successfully (Mock)!');
+    
+    const newBook = {
+      id: 'custom-' + Date.now(),
+      title: formData.title || 'Untitled Book',
+      author: formData.author || 'Dr. Sakhi',
+      category: formData.category || 'Wellness',
+      desc: formData.desc,
+      flipBookUrl: formData.flipBookUrl,
+      audioBookUrl: formData.audioBookUrl,
+      status: formData.status,
+      // If a cover image was uploaded, create an object URL for it, otherwise null
+      coverUrl: formData.coverImage ? URL.createObjectURL(formData.coverImage) : null,
+      isNew: true,
+      pages: 0,
+      reads: '0',
+    };
+
+    const existing = JSON.parse(localStorage.getItem('hs_custom_books') || '[]');
+    localStorage.setItem('hs_custom_books', JSON.stringify([newBook, ...existing]));
+
+    alert('Book added successfully to HealthSakhi Library!');
     localStorage.removeItem('book_cms_draft');
     navigate('/admin/books');
   };

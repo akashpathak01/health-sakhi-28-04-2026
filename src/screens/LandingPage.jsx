@@ -37,9 +37,9 @@ const cardVariants = {
 
 const ChatPreview = () => {
   return (
-    <div className="relative w-full max-w-[440px] mx-auto">
+    <div className="relative w-full max-w-[380px] mx-auto">
       {/* Phone Mockup / Card Container */}
-      <div className="bg-white/80 backdrop-blur-2xl rounded-[40px] shadow-[0_32px_64px_rgba(0,0,0,0.1)] border border-white/60 overflow-hidden flex flex-col h-[480px] sm:h-[520px] lg:h-[500px] animate-float">
+      <div className="bg-white/80 backdrop-blur-2xl rounded-[40px] shadow-[0_32px_64px_rgba(0,0,0,0.1)] border border-white/60 overflow-hidden flex flex-col h-[440px] sm:h-[480px] lg:h-[460px] animate-float">
         {/* Chat Header */}
         <div className="bg-lotus-soft border-b border-cream-border p-4 flex items-center gap-3">
           <div className="w-12 h-12 rounded-full bg-cream-bg flex items-center justify-center border border-turmeric-amber/20 overflow-hidden">
@@ -166,60 +166,49 @@ const LandingPage = () => {
 
   return (
     <div className="w-full overflow-x-hidden bg-transparent text-earth-dark">
-      <section id="home" className="relative min-h-[90vh] lg:h-[calc(100vh-6rem)] lg:min-h-[600px] flex items-center pt-8 pb-12 lg:pt-4 lg:pb-4 overflow-hidden">
-        {/* Full Hero Background Overlay */}
-        <div className="absolute inset-0 opacity-15 pointer-events-none overflow-hidden">
-          <img 
-            src="/Images/WhatsApp Image 2026-05-04 at 6.54.51 PM.jpeg" 
-            alt="" 
-            className="w-full h-full object-cover" 
-          />
-        </div>
+      <section id="home" className="relative min-h-[80vh] lg:h-[calc(100vh-6rem)] lg:min-h-[500px] flex items-center pt-4 pb-10 lg:pt-6 lg:pb-10 overflow-hidden">
+        {/* Full Hero Background Overlay removed based on client feedback for plain bright background */}
         
         {/* Background Glow */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-[#BA7517]/5 blur-[100px] rounded-full pointer-events-none"></div>
 
         <div className="relative w-full px-4 sm:px-[6%] lg:px-[8%]">
-          <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-6 lg:gap-10 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-4 lg:gap-8 items-center">
             {/* Left Column */}
-            <div className="space-y-6 animate-in fade-in slide-in-from-left-6 duration-1000">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <p className="text-sm md:text-base font-bold text-turmeric-amber tracking-wider">
-                    Healthy Woman = Healthy Family — Ayurveda
+            <div className="flex flex-col justify-center animate-in fade-in slide-in-from-left-6 duration-1000">
+              <div className="space-y-2 sm:space-y-3 lg:pr-8">
+                {/* Shloka at the very top */}
+                <div className="inline-block px-4 py-1.5 bg-turmeric-amber/5 border border-turmeric-amber/20 rounded-full w-fit mb-1">
+                  <p className="text-sm sm:text-base md:text-lg font-bold text-turmeric-amber italic font-serif tracking-widest">
+                    ॥ स्त्रीणाम् स्वास्थ्यम् कुटुंब स्वास्थ्यम् ॥
                   </p>
-                  <div className="flex items-center gap-4">
-                    <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-turmeric-amber/30"></div>
-                    <p className="text-lg md:text-xl font-medium text-turmeric-amber font-serif italic">
-                      ॥ स्त्रीणाम् स्वास्थ्यम् कुटुंब स्वास्थ्यम् ॥
-                    </p>
-                    <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-turmeric-amber/30"></div>
-                  </div>
                 </div>
 
-                <div className="flex items-center gap-6">
-                  <img 
-                    src="/Images/WhatsApp Image 2026-05-04 at 6.32.54 PM.jpeg" 
-                    alt="HealthSakhi Logo" 
-                    className="h-20 w-auto drop-shadow-sm mix-blend-multiply contrast-[1.1] brightness-[1.05]" 
-                  />
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-turmeric-amber/10 border border-turmeric-amber/20">
-                    <span className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.15em] text-turmeric-amber">
-                      For women · By Dr Pratap
-                    </span>
-                  </div>
-                </div>
-                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-black leading-[1.1] lg:leading-[1.02] text-earth-dark tracking-tighter drop-shadow-sm">
-                  Sakhī means the <br />
-                  <span className="text-turmeric-amber inline-block hover:scale-105 transition-transform cursor-default">closest friend</span> who <br />
-                  understands you
+                <h1 
+                  className="text-5xl sm:text-6xl lg:text-[56px] text-earth-dark tracking-tight leading-[1.1] sm:leading-[1.1]" 
+                  style={{ fontFamily: '"Arial Rounded MT Bold", "Arial Rounded", Arial, sans-serif', fontWeight: 'bold' }}
+                >
+                  HealthSakhi - your personal complete wellness app
                 </h1>
-                <p className="text-base md:text-lg text-earth-muted font-medium leading-relaxed max-w-2xl">
-                  A wellness app that talks like a sister — in your language, about your real life. Periods, monsoon moods, joint families, fasts, perimenopause. Nothing skipped, nothing translated thin.
-                </p>
+
+                <div className="space-y-1 sm:space-y-2">
+                  <h2 
+                    className="text-3xl sm:text-4xl lg:text-[42px] text-turmeric-amber leading-[1.2]"
+                    style={{ fontFamily: 'Garamond, "Times New Roman", serif' }}
+                  >
+                    sakhi means your closest companion who understands you
+                  </h2>
+
+                  <h3 
+                    className="text-2xl sm:text-3xl lg:text-4xl text-earth-muted leading-relaxed"
+                    style={{ fontFamily: '"Lucida Handwriting", "Bradley Hand", cursive' }}
+                  >
+                    every woman deserves her own health sakhi
+                  </h3>
+                </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-4">
+              <div className="flex flex-wrap items-center gap-4 mt-4">
                 <Link to="/login" className="px-8 py-3.5 rounded-full text-white font-bold text-sm uppercase tracking-widest bg-turmeric-amber shadow-xl hover:shadow-turmeric-amber/20 hover:scale-105 transition-all">
                   Meet your sakhi
                 </Link>
@@ -234,7 +223,7 @@ const LandingPage = () => {
                 </button>
               </div>
 
-              <div className="pt-4 border-t border-turmeric-amber/10">
+              <div className="pt-2 border-t border-turmeric-amber/10">
                 <div className="flex items-center gap-3">
                   <p className="text-[9px] font-black uppercase tracking-[0.2em] text-earth-muted">She speaks</p>
                   <div className="h-[1px] flex-1 bg-gradient-to-r from-turmeric-amber/20 to-transparent"></div>

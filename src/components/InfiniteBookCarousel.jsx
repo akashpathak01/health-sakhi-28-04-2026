@@ -72,6 +72,22 @@ const InfiniteBookCarousel = () => {
   const [pageNumber, setPageNumber] = useState(1);
   const [direction, setDirection] = useState(0); // 1 for next, -1 for prev
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [customBooks, setCustomBooks] = useState([]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('hs_custom_books');
+    if (saved) {
+      setCustomBooks(JSON.parse(saved));
+    }
+    
+    // Listen for storage changes if same window
+    const handleStorage = () => {
+      const updated = localStorage.getItem('hs_custom_books');
+      if (updated) setCustomBooks(JSON.parse(updated));
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
 
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -102,10 +118,20 @@ const InfiniteBookCarousel = () => {
   const x = useMotionValue(0);
   const baseVelocity = -2.0; // Increased speed
 
+  const combinedBooks = useMemo(() => {
+    // Filter out invalid or incomplete custom books (broken uploads)
+    const validCustom = customBooks.filter(cb => cb.title && (cb.image || cb.coverUrl));
+    
+    // If there are custom books, replace the corresponding number of default books
+    // so the total count remains the same, fulfilling "1 card kam hojaye or naya card dikhe"
+    const countToKeep = Math.max(0, books.length - validCustom.length);
+    return [...validCustom.map(cb => ({...cb, bgColor: 'bg-[#FFF9F5]', accentColor: 'text-turmeric-amber'})), ...books.slice(0, countToKeep)];
+  }, [customBooks]);
+
   // Infinite looping logic
   // We triple the books to make sure we always have enough to cover the screen
-  const items = useMemo(() => [...books, ...books, ...books], []);
-  const loopWidth = books.length * TOTAL_WIDTH;
+  const items = useMemo(() => [...combinedBooks, ...combinedBooks, ...combinedBooks], [combinedBooks]);
+  const loopWidth = combinedBooks.length * TOTAL_WIDTH;
 
   useAnimationFrame((t, delta) => {
     if (isHovered) return;
@@ -133,7 +159,7 @@ const InfiniteBookCarousel = () => {
       const distance = Math.abs(itemPos - detectionOffset);
       if (distance < minDistance) {
         minDistance = distance;
-        closestId = i % books.length;
+        closestId = i % combinedBooks.length;
       }
     });
 
@@ -156,7 +182,7 @@ const InfiniteBookCarousel = () => {
           style={{ x }}
         >
           {items.map((book, idx) => {
-            const originalIndex = idx % books.length;
+            const originalIndex = idx % combinedBooks.length;
             const isActive = originalIndex === activeId;
 
             return (
@@ -176,11 +202,18 @@ const InfiniteBookCarousel = () => {
                 onMouseEnter={() => handleHover(originalIndex)}
                 onMouseLeave={() => setIsHovered(false)}
               >
+                {/* NEW Badge */}
+                {book.isNew && (
+                  <div className="absolute -top-3 -right-3 z-50 bg-turmeric-amber text-white text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-lg border-2 border-white animate-pulse">
+                    NEW ✨
+                  </div>
+                )}
+
                 {/* Book Image Cover */}
-                {book.image && (
+                {(book.image || book.coverUrl) && (
                   <div className="absolute inset-0 z-0 rounded-2xl overflow-hidden">
                     <img
-                      src={book.image}
+                      src={book.image || book.coverUrl}
                       alt={book.title}
                       className="w-full h-full object-cover transition-opacity duration-500 opacity-100"
                     />
@@ -191,7 +224,7 @@ const InfiniteBookCarousel = () => {
 
                 {/* Book Title (Hidden when active to let popup take over) */}
                 {!isActive && (
-                  <span className={`relative z-10 text-[11px] font-black uppercase leading-tight tracking-widest ${book.image ? 'text-white drop-shadow-md' : book.accentColor} mb-2`}>
+                  <span className={`relative z-10 text-[11px] font-black uppercase leading-tight tracking-widest ${(book.image || book.coverUrl) ? 'text-white drop-shadow-md' : book.accentColor} mb-2`}>
                     {book.title}
                   </span>
                 )}
@@ -229,7 +262,7 @@ const InfiniteBookCarousel = () => {
 
       {/* Navigation Indicators (Visual Only for Loop) */}
       <div className="flex justify-center gap-2 mt-8">
-        {books.map((_, i) => (
+        {combinedBooks.map((_, i) => (
           <div
             key={i}
             className={`h-1 rounded-full transition-all duration-500 ${i === activeId ? 'w-8 bg-turmeric-amber' : 'w-2 bg-turmeric-amber/20'
@@ -387,9 +420,9 @@ const InfiniteBookCarousel = () => {
                 <div className="flex bg-white rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl relative">
                   <button onClick={() => setSelectedBook(null)} className="absolute top-4 right-4 text-2xl text-earth-muted hover:text-earth-dark transition-colors z-10">×</button>
                   <div className="flex flex-1 overflow-hidden">
-                    <div className="w-1/3 bg-cream-deep/30 flex items-center justify-center p-6 border-r border-earth-dark/5">
-                      {selectedBook.image ? (
-                        <img src={selectedBook.image} alt={selectedBook.title} className="w-full h-auto rounded-xl shadow-lg object-cover" />
+                    <div className="w-1/3 bg-cream-deep/30 flex items-center justify-center p-6 border-r border-earth-dark/5 relative">
+                      {(selectedBook.image || selectedBook.coverUrl) ? (
+                        <img src={selectedBook.image || selectedBook.coverUrl} alt={selectedBook.title} className="w-full h-auto rounded-xl shadow-lg object-cover" />
                       ) : (
                         <div className={`w-full h-[200px] rounded-xl ${selectedBook.bgColor} flex items-center justify-center`}>
                           <span className={`text-xs font-black uppercase ${selectedBook.accentColor}`}>{selectedBook.title}</span>

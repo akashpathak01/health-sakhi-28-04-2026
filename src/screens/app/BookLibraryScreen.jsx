@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BookOpen, Search, Sparkles, ChevronRight, PlayCircle, Clock, CheckCircle, Headphones, Trophy } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import BookReaderModal from '../../components/BookReaderModal';
 
 const INITIAL_BOOKS = [
   { 
@@ -56,12 +57,22 @@ const BookLibraryScreen = () => {
   const [activeCategory, setActiveCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [showWelcome, setShowWelcome] = useState(false);
+  const [customBooks, setCustomBooks] = useState([]);
+  const [readBook, setReadBook] = useState(null);
   const navigate = useNavigate();
 
   // Get progress from localStorage
   const completedBooks = JSON.parse(localStorage.getItem('completedBooks') || '[]');
 
   useEffect(() => {
+    const saved = localStorage.getItem('hs_custom_books');
+    if (saved) setCustomBooks(JSON.parse(saved));
+    const handleStorage = () => {
+      const updated = localStorage.getItem('hs_custom_books');
+      if (updated) setCustomBooks(JSON.parse(updated));
+    };
+    window.addEventListener('storage', handleStorage);
+
     const hasVisited = localStorage.getItem('hasVisitedBooks');
     if (!hasVisited) {
       setShowWelcome(true);
@@ -82,9 +93,13 @@ const BookLibraryScreen = () => {
         localStorage.setItem('userProgress', JSON.stringify(userProgress));
       }
     }
+    return () => window.removeEventListener('storage', handleStorage);
   }, []);
 
-  const filteredBooks = INITIAL_BOOKS.filter(book => {
+  const validCustom = customBooks.filter(cb => cb.title && (cb.image || cb.coverUrl));
+  const allBooks = [...validCustom, ...INITIAL_BOOKS];
+
+  const filteredBooks = allBooks.filter(book => {
     const matchesCategory = activeCategory === 'All' || book.category === activeCategory;
     const matchesSearch = book.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                          book.author.toLowerCase().includes(searchQuery.toLowerCase());
@@ -213,20 +228,31 @@ const BookLibraryScreen = () => {
           return (
             <div
               key={book.id}
-              onClick={() => navigate(`/app/books/${book.id}`)}
+              onClick={() => {
+                if (book.isNew && book.bookFile) {
+                  setReadBook(book);
+                } else {
+                  navigate(`/app/books/${book.id}`);
+                }
+              }}
               className={`group bg-white rounded-3xl sm:rounded-[2.5rem] border p-3 sm:p-4 transition-all cursor-pointer flex flex-col ${isCompleted ? 'border-health-green/30 bg-health-green/[0.02]' : 'border-slate-100 hover:border-health-green/20 hover:shadow-2xl'}`}
             >
               {/* Cover Image */}
-              <div className="relative aspect-[16/10] rounded-xl sm:rounded-2xl overflow-hidden mb-3 sm:mb-4">
+              <div className="relative aspect-[16/10] rounded-xl sm:rounded-2xl overflow-hidden mb-3 sm:mb-4 bg-slate-100">
                 <img
-                  src={book.image}
+                  src={book.image || book.coverUrl || 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&q=80&w=400'}
                   alt={book.title}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
                 <div className="absolute top-2 left-2 px-2 py-1 bg-black/50 backdrop-blur-sm rounded-lg text-[7px] sm:text-[8px] font-black text-white uppercase tracking-widest z-10">
                   {book.category}
                 </div>
-                {isCompleted && (
+                {book.isNew && (
+                  <div className="absolute top-2 right-2 px-2 py-1 bg-[#BA7517] text-white rounded-full text-[7px] sm:text-[8px] font-black uppercase tracking-widest shadow-lg flex items-center gap-1 z-10 animate-pulse">
+                    NEW ✨
+                  </div>
+                )}
+                {isCompleted && !book.isNew && (
                   <div className="absolute top-2 right-2 px-2 sm:px-3 py-1 bg-health-green text-white rounded-full text-[7px] sm:text-[8px] font-black uppercase tracking-widest shadow-lg flex items-center gap-1 z-10">
                     <CheckCircle size={10} /> Completed
                   </div>
@@ -290,6 +316,15 @@ const BookLibraryScreen = () => {
           </div>
           <p className="text-xl font-black text-slate-400 uppercase tracking-widest">No books found</p>
         </div>
+      )}
+
+      {/* Book Reader Modal */}
+      {readBook && (
+        <BookReaderModal
+          isOpen={!!readBook}
+          onClose={() => setReadBook(null)}
+          book={readBook}
+        />
       )}
     </div>
   );

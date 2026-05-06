@@ -393,12 +393,25 @@ const BookCMS = () => {
     status: 'Published',
     flipBookUrl: '',
     audioBookUrl: '',
+    bookFile: null,
+    coverUrl: null,
     questions: [
       { question: '', options: ['', '', '', ''], correct: 0, explanation: '' }
     ]
   };
 
   const [formData, setFormData] = useState(initialFormData);
+
+  useEffect(() => {
+    // Load custom books from localStorage and merge with initial ones
+    const savedCustom = JSON.parse(localStorage.getItem('hs_custom_books') || '[]');
+    if (savedCustom.length > 0) {
+      // Filter out duplicates just in case
+      const customIds = new Set(savedCustom.map(b => b.id));
+      const baseBooks = INITIAL_BOOKS.filter(b => !customIds.has(b.id));
+      setBooks([...savedCustom, ...baseBooks]);
+    }
+  }, []);
 
   useEffect(() => {
     const draft = localStorage.getItem('book_cms_draft');
@@ -423,8 +436,21 @@ const BookCMS = () => {
       setBooks(prev => prev.map(b => b.id === editBook.id ? { ...b, ...formData } : b));
       setEditBook(null);
     } else {
-      const newBook = { id: Date.now(), ...formData, reads: '0', date: 'Just now' };
+      const newBook = { 
+        id: Date.now(), 
+        ...formData, 
+        reads: '0', 
+        date: 'Just now',
+        isNew: true
+      };
+      
       setBooks([newBook, ...books]);
+      
+      // Save to localStorage for global visibility across the app
+      const existingCustom = JSON.parse(localStorage.getItem('hs_custom_books') || '[]');
+      localStorage.setItem('hs_custom_books', JSON.stringify([newBook, ...existingCustom]));
+      window.dispatchEvent(new Event('storage'));
+      
       setIsModalOpen(false);
     }
     localStorage.removeItem('book_cms_draft');
@@ -432,7 +458,15 @@ const BookCMS = () => {
   };
 
   const handleDelete = (id) => {
-    setBooks(prev => prev.filter(b => b.id !== id));
+    const updatedBooks = books.filter(b => b.id !== id);
+    setBooks(updatedBooks);
+    
+    // Sync with localStorage
+    const existingCustom = JSON.parse(localStorage.getItem('hs_custom_books') || '[]');
+    const updatedCustom = existingCustom.filter(b => b.id !== id);
+    localStorage.setItem('hs_custom_books', JSON.stringify(updatedCustom));
+    window.dispatchEvent(new Event('storage'));
+
     setDeleteBook(null);
     setSelectedIds(prev => prev.filter(sid => sid !== id));
   };
@@ -449,7 +483,15 @@ const BookCMS = () => {
   const handleBulkDelete = () => {
     if (!selectedIds.length) return;
     if (confirm(`Are you sure you want to delete ${selectedIds.length} books?`)) {
-      setBooks(prev => prev.filter(b => !selectedIds.includes(b.id)));
+      const updatedBooks = books.filter(b => !selectedIds.includes(b.id));
+      setBooks(updatedBooks);
+      
+      // Sync with localStorage
+      const existingCustom = JSON.parse(localStorage.getItem('hs_custom_books') || '[]');
+      const updatedCustom = existingCustom.filter(b => !selectedIds.includes(b.id));
+      localStorage.setItem('hs_custom_books', JSON.stringify(updatedCustom));
+      window.dispatchEvent(new Event('storage'));
+
       setSelectedIds([]);
     }
   }
@@ -552,7 +594,7 @@ const BookCMS = () => {
           <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search title, author or keywords..." className="w-full h-10 pl-12 pr-4 bg-transparent outline-none font-bold text-sm tracking-tight" />
         </div>
         <div className="flex flex-col sm:flex-row w-full lg:w-auto gap-2 lg:pr-2">
-          <StyledDropdown label="By Category" value={filterCat} options={['All Categories', 'Women Health', 'Mental Wellness', 'Nutrition', 'Yoga & Lifestyle']} onChange={setFilterCat} icon={Tag} />
+          <StyledDropdown label="By Category" value={filterCat} options={['All Categories', 'Women Health', 'Mental Wellness', 'General Health', 'Food & Nutrition', 'Yoga & Lifestyle']} onChange={setFilterCat} icon={Tag} />
           <StyledDropdown label="By Status" value={filterStatus} options={['All Status', 'Published', 'Draft']} onChange={setFilterStatus} icon={Layers} />
         </div>
       </div>
@@ -667,7 +709,7 @@ const BookCMS = () => {
                 <input required type="text" value={formData.author} onChange={e => setFormData({ ...formData, author: e.target.value })} className="w-full h-14 px-5 bg-slate-50 border border-black/5 rounded-2xl outline-none focus:bg-white focus:border-health-green shadow-inner text-sm font-bold text-slate-800 transition-all" placeholder="e.g. Dr. Ananya Iyer" />
               </div>
               <div className="col-span-2 sm:col-span-1 text-left">
-                <FormDropdown label="Category" value={formData.category} options={['Women Health', 'Mental Wellness', 'Nutrition', 'Yoga & Lifestyle']} onChange={val => setFormData({ ...formData, category: val })} />
+                <FormDropdown label="Category" value={formData.category} options={['Women Health', 'Mental Wellness', 'General Health', 'Food & Nutrition', 'Yoga & Lifestyle']} onChange={val => setFormData({ ...formData, category: val })} />
               </div>
               <div className="col-span-2 sm:col-span-1 text-left">
                 <FormDropdown label="Publishing Status" value={formData.status} options={['Published', 'Draft']} onChange={val => setFormData({ ...formData, status: val })} />
@@ -681,8 +723,14 @@ const BookCMS = () => {
             <div className="space-y-6 sm:space-y-8 animate-in fade-in slide-in-from-left-4 duration-400 text-left">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-left">
                 <div className="space-y-2 text-left">
-                  <label className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest text-left">Flip Book Link</label>
-                  <input type="url" value={formData.flipBookUrl} onChange={e => setFormData({ ...formData, flipBookUrl: e.target.value })} className="w-full h-14 px-5 bg-slate-50 border border-black/5 rounded-2xl outline-none focus:bg-white focus:border-health-green shadow-inner text-sm font-bold text-slate-800 transition-all" placeholder="https://..." />
+                  <label className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest text-left">Upload PDF Book</label>
+                  <input type="file" accept="application/pdf" onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const url = URL.createObjectURL(file);
+                      setFormData({ ...formData, bookFile: url });
+                    }
+                  }} className="w-full h-14 px-5 bg-slate-50 border border-black/5 rounded-2xl outline-none focus:bg-white focus:border-health-green shadow-inner text-sm font-bold text-slate-800 transition-all pt-4" />
                 </div>
                 <div className="space-y-2 text-left">
                   <label className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest text-left">Audio Book Link</label>
@@ -691,13 +739,26 @@ const BookCMS = () => {
               </div>
               <div className="upload-box space-y-4 text-left">
                 <label className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest block leading-none text-left">High-Res Book Cover</label>
-                <div className="w-full h-44 border-2 border-dashed border-slate-100 rounded-[2.5rem] flex flex-col items-center justify-center gap-4 hover:border-health-green hover:bg-health-green/5 transition-all cursor-pointer group relative overflow-hidden">
-                  <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-slate-300 group-hover:text-health-green shadow-md group-hover:scale-110 transition-all"><UploadCloud size={24} /></div>
-                  <div className="text-center text-left">
-                    <p className="text-sm font-bold text-slate-600">Drop cover graphic here</p>
-                    <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mt-2">JPEG, PNG (2MB max)</p>
-                  </div>
-                </div>
+                <label className="w-full h-44 border-2 border-dashed border-slate-100 rounded-[2.5rem] flex flex-col items-center justify-center gap-4 hover:border-health-green hover:bg-health-green/5 transition-all cursor-pointer group relative overflow-hidden">
+                  <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const url = URL.createObjectURL(file);
+                      setFormData({ ...formData, coverUrl: url });
+                    }
+                  }} />
+                  {formData.coverUrl ? (
+                    <img src={formData.coverUrl} className="w-full h-full object-cover" alt="Cover Preview" />
+                  ) : (
+                    <>
+                      <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-slate-300 group-hover:text-health-green shadow-md group-hover:scale-110 transition-all"><UploadCloud size={24} /></div>
+                      <div className="text-center text-left">
+                        <p className="text-sm font-bold text-slate-600">Drop cover graphic here</p>
+                        <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mt-2">JPEG, PNG (2MB max)</p>
+                      </div>
+                    </>
+                  )}
+                </label>
               </div>
             </div>
           ) : (

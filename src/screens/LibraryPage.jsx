@@ -7,14 +7,30 @@ import BookReaderModal from '../components/BookReaderModal';
 const LibraryPage = () => {
   const [selectedBook, setSelectedBook] = useState(null);
   const [activeCategory, setActiveCategory] = useState('All');
+  const [customBooks, setCustomBooks] = useState([]);
+
+  React.useEffect(() => {
+    const saved = localStorage.getItem('hs_custom_books');
+    if (saved) setCustomBooks(JSON.parse(saved));
+    
+    const handleStorage = () => {
+      const updated = localStorage.getItem('hs_custom_books');
+      if (updated) setCustomBooks(JSON.parse(updated));
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
+
+  const validCustom = customBooks.filter(cb => cb.title && (cb.image || cb.coverUrl));
+  const allBooks = [...validCustom, ...booksData];
 
   // Derive unique categories
-  const categories = ['All', ...new Set(booksData.map(book => book.category))];
+  const categories = ['All', ...new Set(allBooks.map(book => book.category))];
 
   // Filter books based on active category
   const filteredBooks = activeCategory === 'All' 
-    ? booksData 
-    : booksData.filter(book => book.category === activeCategory);
+    ? allBooks 
+    : allBooks.filter(book => book.category === activeCategory);
 
   // Duplicate books a bit to make the grid look full (Netflix style) if there are too few
   const displayBooks = [...filteredBooks, ...filteredBooks, ...filteredBooks].slice(0, 12);
@@ -87,12 +103,19 @@ const LibraryPage = () => {
               onClick={() => setSelectedBook(book)}
               className="group cursor-pointer"
             >
+              {/* NEW Badge */}
+              {book.isNew && (
+                <div className="absolute -top-2 -right-2 z-50 bg-turmeric-amber text-white text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-lg border-2 border-white animate-pulse">
+                  NEW ✨
+                </div>
+              )}
+
               {/* Book Cover */}
               <div className="relative aspect-[2/3] rounded-2xl overflow-hidden shadow-md group-hover:shadow-2xl group-hover:-translate-y-2 transition-all duration-500 mb-4 bg-white border border-black/5">
-                {book.image ? (
-                  <img src={book.image} alt={book.title} className="w-full h-full object-cover" />
+                {(book.image || book.coverUrl) ? (
+                  <img src={book.image || book.coverUrl} alt={book.title} className="w-full h-full object-cover" />
                 ) : (
-                  <div className={`w-full h-full ${book.bgColor} flex items-center justify-center p-4 text-center`}>
+                  <div className={`w-full h-full ${book.bgColor || 'bg-slate-100'} flex items-center justify-center p-4 text-center`}>
                     <h3 className={`font-black text-xl ${book.accentColor}`}>{book.title}</h3>
                   </div>
                 )}
