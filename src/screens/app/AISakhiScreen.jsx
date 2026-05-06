@@ -54,20 +54,20 @@ const AISakhiScreen = () => {
 
     const lowerText = msgText.toLowerCase();
     let aiResponse = 'I hear you, sweetheart 🌸 You are not alone. Let\'s work through this together.';
-    let suggestions = [{ icon: Play, label: 'Healing Music', type: 'video' }];
+    let suggestions = [{ icon: 'play', label: 'Healing Music', type: 'video' }];
 
     if (lowerText.includes('tired') || lowerText.includes('exhausted') || lowerText.includes('sleep') || lowerText.includes('low energy')) {
       aiResponse = 'I sense you are feeling quite tired. It is okay to rest. Would you like to do a quick wind-down session? 🌙';
-      suggestions = [{ icon: Play, label: 'Start Wind-down', type: 'action', route: '/app/mood/tired' }];
+      suggestions = [{ icon: 'play', label: 'Start Wind-down', type: 'action', route: '/app/mood/tired' }];
     } else if (lowerText.includes('sad') || lowerText.includes('cry') || lowerText.includes('alone') || lowerText.includes('down')) {
       aiResponse = 'Your words feel heavy. I am right here with you. Let\'s process this feeling safely together. 🌸';
-      suggestions = [{ icon: Sparkles, label: 'Comfort Session', type: 'action', route: '/app/mood/sad' }];
+      suggestions = [{ icon: 'sparkles', label: 'Comfort Session', type: 'action', route: '/app/mood/sad' }];
     } else if (lowerText.includes('stress') || lowerText.includes('anxious') || lowerText.includes('worry') || lowerText.includes('panic') || lowerText.includes('overwhelm')) {
       aiResponse = 'Take a deep breath. I know things feel overwhelming right now. Let\'s do a quick breathing exercise. 🌿';
-      suggestions = [{ icon: Play, label: 'Breathe Together', type: 'action', route: '/app/mood/stressed' }];
+      suggestions = [{ icon: 'play', label: 'Breathe Together', type: 'action', route: '/app/mood/stressed' }];
     } else if (lowerText.includes('happy') || lowerText.includes('good') || lowerText.includes('great') || lowerText.includes('smile') || lowerText.includes('joy')) {
       aiResponse = 'That is wonderful to hear! Your energy is glowing. Let\'s celebrate this feeling! ✨';
-      suggestions = [{ icon: Sparkles, label: 'Preserve Joy', type: 'action', route: '/app/mood/happy' }];
+      suggestions = [{ icon: 'sparkles', label: 'Preserve Joy', type: 'action', route: '/app/mood/happy' }];
     }
 
     setTimeout(() => {
@@ -136,15 +136,18 @@ const AISakhiScreen = () => {
                   </div>
                   {msg.suggestions && (
                       <div className="mt-4 flex flex-wrap gap-2">
-                        {msg.suggestions.map((s, i) => (
-                          <button 
-                            key={i} 
-                            onClick={() => { if(s.route) navigate(s.route); }}
-                            className="px-5 py-3 rounded-2xl bg-white border border-rose-100 text-[10px] font-black uppercase tracking-widest text-[#ff69b4] shadow-sm flex items-center gap-2 hover:bg-rose-50 transition-all"
-                          >
-                              <s.icon size={14} /> {s.label}
-                          </button>
-                        ))}
+                        {msg.suggestions.map((s, i) => {
+                          const IconComp = s.icon === 'play' ? Play : Sparkles;
+                          return (
+                            <button 
+                              key={i} 
+                              onClick={() => { if(s.route) navigate(s.route); }}
+                              className="px-5 py-3 rounded-2xl bg-white border border-rose-100 text-[10px] font-black uppercase tracking-widest text-[#ff69b4] shadow-sm flex items-center gap-2 hover:bg-rose-50 transition-all"
+                            >
+                                <IconComp size={14} /> {s.label}
+                            </button>
+                          );
+                        })}
                       </div>
                   )}
                   <span className="mt-2 text-[9px] font-black uppercase tracking-widest text-[#C4A0AC]">{msg.time}</span>

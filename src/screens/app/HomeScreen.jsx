@@ -20,6 +20,9 @@ const HomeScreen = () => {
   const [catStartIndex, setCatStartIndex] = useState(0);
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [showVideoModal, setShowVideoModal] = useState(false);
+  
+  const [isBridging, setIsBridging] = useState(false);
+  const [bridgeStep, setBridgeStep] = useState(0);
 
   const container = {
     hidden: { opacity: 0 },
@@ -139,6 +142,19 @@ const HomeScreen = () => {
         navigate(`/app/mood/${selectedMood.label.toLowerCase()}`);
       }
     }, 1500);
+  };
+
+  const handleOpenBridge = () => {
+    setIsBridging(true);
+    setBridgeStep(0);
+    
+    setTimeout(() => setBridgeStep(1), 1000); // Syncing Wellness Nodes...
+    setTimeout(() => setBridgeStep(2), 2200); // Establishing Neural Link...
+    setTimeout(() => setBridgeStep(3), 3200); // Bridge Connected 🌸
+    setTimeout(() => {
+      setIsBridging(false);
+      navigate('/app/ai-sakhi');
+    }, 4200);
   };
 
   const handleVideoClick = (video) => {
@@ -508,11 +524,11 @@ const HomeScreen = () => {
                <p className="text-xs font-bold text-white/50 mb-8 max-w-[200px] leading-relaxed italic">
                   "Your AI Sakhi is active and observing your wellness nodes."
                </p>
-               <Link to="/app/ai-sakhi" className="w-full">
+               <button onClick={handleOpenBridge} className="w-full">
                   <div className="py-4 bg-[#ff69b4] rounded-2xl text-[10px] font-black uppercase tracking-widest text-white hover:brightness-110 transition-all flex items-center justify-center gap-2">
                     Open AI Bridge <ArrowRight size={14} />
                   </div>
-               </Link>
+               </button>
             </motion.section>
           </div>
         </main>
@@ -571,6 +587,82 @@ const HomeScreen = () => {
                     <>Log Mood Pulse <Send size={14} /></>
                   )}
                 </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+      
+      {/* ── AI Bridge Modal ── */}
+      <AnimatePresence>
+        {isBridging && (
+          <div className="fixed inset-0 z-[300] flex items-center justify-center p-6">
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }} 
+              className="absolute inset-0 bg-[#2D1520]/80 backdrop-blur-xl" 
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.8 }} 
+              animate={{ opacity: 1, scale: 1 }} 
+              exit={{ opacity: 0, scale: 0.8, filter: 'blur(10px)' }} 
+              className="relative z-10 flex flex-col items-center justify-center text-center max-w-md w-full"
+            >
+              <div className="relative w-40 h-40 mb-12 flex items-center justify-center">
+                 {/* Outer rings */}
+                 <motion.div 
+                   animate={{ rotate: 360, scale: [1, 1.1, 1] }} 
+                   transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                   className="absolute inset-0 rounded-full border border-[#ff69b4]/30 border-t-[#ff69b4] border-b-[#ff69b4]" 
+                 />
+                 <motion.div 
+                   animate={{ rotate: -360, scale: [1, 1.2, 1] }} 
+                   transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                   className="absolute inset-4 rounded-full border border-white/20 border-l-white border-r-white" 
+                 />
+                 
+                 {/* Core glow */}
+                 <motion.div 
+                   animate={{ scale: [0.8, 1.2, 0.8], opacity: [0.5, 1, 0.5] }} 
+                   transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                   className="absolute inset-10 bg-[#ff69b4] rounded-full blur-xl" 
+                 />
+                 
+                 {/* Icon */}
+                 <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center relative z-10 shadow-[0_0_40px_rgba(255,105,180,0.8)]">
+                    <Sparkles size={32} className="text-[#ff69b4]" />
+                 </div>
+              </div>
+
+              <div className="h-20 flex items-center justify-center">
+                 <AnimatePresence mode="wait">
+                    {bridgeStep === 0 && (
+                      <motion.h2 key="step0" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="text-2xl md:text-3xl font-black text-white tracking-tight drop-shadow-lg">Initiating AI Bridge...</motion.h2>
+                    )}
+                    {bridgeStep === 1 && (
+                      <motion.div key="step1" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="text-center">
+                        <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight drop-shadow-lg">Syncing Wellness Nodes</h2>
+                        <span className="text-[#ff69b4] animate-pulse block text-[10px] md:text-xs font-black uppercase tracking-[0.3em] mt-3 drop-shadow-md">Connecting to Health Core</span>
+                      </motion.div>
+                    )}
+                    {bridgeStep === 2 && (
+                      <motion.h2 key="step2" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="text-2xl md:text-3xl font-black text-[#ff69b4] tracking-tight drop-shadow-lg">Establishing Neural Link...</motion.h2>
+                    )}
+                    {bridgeStep === 3 && (
+                      <motion.h2 key="step3" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.1 }} className="text-3xl md:text-4xl font-black text-white tracking-tight drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">Bridge Connected 🌸</motion.h2>
+                    )}
+                 </AnimatePresence>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="w-full max-w-[240px] h-1 bg-white/10 rounded-full mt-12 overflow-hidden mx-auto relative">
+                 <motion.div 
+                   initial={{ width: '0%' }}
+                   animate={{ width: bridgeStep === 0 ? '25%' : bridgeStep === 1 ? '50%' : bridgeStep === 2 ? '85%' : '100%' }}
+                   transition={{ duration: 0.8, ease: "easeInOut" }}
+                   className="absolute top-0 left-0 h-full bg-[#ff69b4] rounded-full shadow-[0_0_10px_#ff69b4]"
+                 />
               </div>
             </motion.div>
           </div>
