@@ -6,6 +6,7 @@ import DashboardLayout from './layouts/DashboardLayout';
 // Public Screens
 import LandingPage from './screens/LandingPage';
 import HowToUsePage from './screens/HowToUsePage';
+import LibraryPage from './screens/LibraryPage';
 import LoginPage from './screens/LoginPage';
 import OTPScreen from './screens/OTPScreen';
 
@@ -72,6 +73,7 @@ const App = () => {
       <Route element={<LandingLayout />}>
         <Route path="/" element={<LandingPage />} />
         <Route path="/how-to-use" element={<HowToUsePage />} />
+        <Route path="/library" element={<LibraryPage />} />
       </Route>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/otp" element={<OTPScreen />} />

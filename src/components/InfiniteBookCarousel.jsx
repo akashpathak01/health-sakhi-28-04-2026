@@ -71,6 +71,13 @@ const InfiniteBookCarousel = () => {
   const [numPages, setNumPages] = useState(null);
   const [pageNumber, setPageNumber] = useState(1);
   const [direction, setDirection] = useState(0); // 1 for next, -1 for prev
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   const containerRef = useRef(null);
 
   function onDocumentLoadSuccess({ numPages }) {
@@ -246,17 +253,23 @@ const InfiniteBookCarousel = () => {
               animate={{ scaleX: 1, opacity: 1 }}
               exit={{ scaleX: 0, opacity: 0 }}
               transition={{ duration: 0.5, ease: "circOut" }}
-              className="relative max-w-7xl w-full flex justify-center items-center h-[90vh]"
+              className="relative max-w-7xl w-full flex justify-center items-center h-[85vh] sm:h-[90vh] lg:h-[90vh]"
               onClick={(e) => e.stopPropagation()}
             >
               {selectedBook.bookFile ? (
                 /* Pure Realistic E-Book Reader with 3D Flip */
-                <div className="relative flex shadow-[0_0_60px_rgba(0,0,0,0.8)] rounded-md" style={{ perspective: '2500px' }}>
+                <div 
+                  className="relative flex shadow-[0_0_60px_rgba(0,0,0,0.8)] rounded-md transition-transform duration-300" 
+                  style={{ 
+                    perspective: '2500px',
+                    transform: windowWidth < 1200 ? `scale(${Math.min(1.2, (windowWidth - 20) / (windowWidth < 768 ? 800 : 1200))})` : 'none'
+                  }}
+                >
                   
                   {/* Floating Close Button */}
                   <button
                     onClick={() => setSelectedBook(null)}
-                    className="absolute -top-12 right-0 w-10 h-10 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white text-xl font-bold transition-all z-50"
+                    className="absolute -top-4 -right-4 w-10 h-10 bg-red-500 hover:bg-red-600 border-2 border-white shadow-xl rounded-full flex items-center justify-center text-white text-xl font-bold transition-all z-50"
                   >
                     ×
                   </button>

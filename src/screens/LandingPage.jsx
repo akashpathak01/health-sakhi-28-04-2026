@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Heart, ChevronRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { Link, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import InfiniteBookCarousel from '../components/InfiniteBookCarousel';
 
 const containerVariants = {
@@ -108,7 +108,9 @@ const ChatPreview = () => {
 };
 
 const LandingPage = () => {
+  const navigate = useNavigate();
   const [pricingTab, setPricingTab] = useState('subscription');
+  const [isDemoOpen, setIsDemoOpen] = useState(false);
 
   const differentiators = [
     {
@@ -221,7 +223,10 @@ const LandingPage = () => {
                 <Link to="/login" className="px-8 py-3.5 rounded-full text-white font-bold text-sm uppercase tracking-widest bg-turmeric-amber shadow-xl hover:shadow-turmeric-amber/20 hover:scale-105 transition-all">
                   Meet your sakhi
                 </Link>
-                <button className="group flex items-center gap-3 text-sm font-bold text-earth-dark uppercase tracking-widest hover:text-turmeric-amber transition-all">
+                <button 
+                  onClick={() => setIsDemoOpen(true)}
+                  className="group flex items-center gap-3 text-sm font-bold text-earth-dark uppercase tracking-widest hover:text-turmeric-amber transition-all"
+                >
                   <div className="w-9 h-9 rounded-full border-2 border-earth-dark group-hover:border-turmeric-amber flex items-center justify-center transition-all">
                     <ChevronRight size={18} className="ml-0.5" />
                   </div>
@@ -468,9 +473,9 @@ const LandingPage = () => {
                 <p className="text-lg sm:text-xl text-white/70 font-medium leading-relaxed max-w-xl mx-auto lg:mx-0">
                   Anonymous, gently moderated, six women only. The circle that meets you where your friends and family can't.
                 </p>
-                <button className="px-10 py-4 rounded-full bg-turmeric-amber text-white font-black uppercase tracking-[0.2em] shadow-2xl shadow-turmeric-amber/40 hover:scale-105 active:scale-95 transition-all">
+                <Link to="/login" className="inline-block px-10 py-4 rounded-full bg-turmeric-amber text-white font-black uppercase tracking-[0.2em] shadow-2xl shadow-turmeric-amber/40 hover:scale-105 active:scale-95 transition-all">
                   Join a circle
-                </button>
+                </Link>
               </div>
 
               {/* Right Side - Circles Grid */}
@@ -555,33 +560,74 @@ const LandingPage = () => {
         </div>
       </section>
 
-      <section id="pricing" className="relative lg:h-screen min-h-[600px] flex items-center justify-center py-20 lg:py-0 overflow-hidden bg-turmeric-amber text-white">
-        <div className="w-full px-4 sm:px-[6%] lg:px-[8%] relative z-10">
-          <div className="max-w-4xl mx-auto text-center space-y-8 sm:space-y-12">
+      <section id="pricing" className="relative min-h-screen flex items-center justify-center py-12 lg:py-24 overflow-hidden bg-turmeric-amber text-white">
+        <div className="w-full px-4 sm:px-[6%] lg:px-[8%] relative z-10 pt-16 sm:pt-20">
+          <div className="max-w-4xl mx-auto text-center space-y-6 sm:space-y-8">
             
             <div className="space-y-4 sm:space-y-6">
-              <h2 className="text-4xl sm:text-6xl md:text-8xl font-black leading-tight tracking-tighter">
+              <h2 className="text-3xl sm:text-5xl md:text-7xl font-black leading-[1.1] tracking-tighter">
                 Your sakhī <br />
                 is waiting
               </h2>
-              <p className="text-lg sm:text-xl md:text-2xl font-medium text-white/80 max-w-3xl mx-auto leading-relaxed">
+              <p className="text-base sm:text-lg md:text-xl font-medium text-white/80 max-w-2xl mx-auto leading-relaxed">
                 In Hindi, Marathi, Tamil, Telugu, Bengali, Arabic or English. <br className="hidden sm:block" />
                 On your phone. From tomorrow morning.
               </p>
             </div>
 
-            <div className="space-y-6 sm:space-y-8">
-              <Link to="/login" className="inline-block px-8 sm:px-16 py-5 sm:py-6 rounded-full bg-white text-turmeric-amber font-black uppercase tracking-[0.2em] shadow-2xl hover:scale-105 active:scale-95 transition-all text-sm sm:text-base">
-                Meet your sakhī — free for 30 days
-              </Link>
-              
-              <div className="space-y-2">
-                <p className="text-xs sm:text-sm font-black uppercase tracking-[0.15em] text-white/60">
-                  Then ₹99/month or AED 14/month
-                </p>
-                <p className="text-[10px] sm:text-xs font-medium text-white/40 uppercase tracking-widest">
-                  No ads. Ever. Cancel in two taps.
-                </p>
+            {/* Pricing Tabs */}
+            <div className="flex flex-col items-center gap-6">
+              <div className="inline-flex p-1.5 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20">
+                <button 
+                  onClick={() => setPricingTab('subscription')}
+                  className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+                    pricingTab === 'subscription' 
+                      ? 'bg-white text-turmeric-amber shadow-lg' 
+                      : 'text-white/70 hover:text-white'
+                  }`}
+                >
+                  Subscription
+                </button>
+                <button 
+                  onClick={() => setPricingTab('lifetime')}
+                  className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+                    pricingTab === 'lifetime' 
+                      ? 'bg-white text-turmeric-amber shadow-lg' 
+                      : 'text-white/70 hover:text-white'
+                  }`}
+                >
+                  Lifetime
+                </button>
+              </div>
+
+              <div className="min-h-[180px] flex flex-col items-center justify-center space-y-6 sm:space-y-8">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={pricingTab}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.3 }}
+                    className="space-y-6 sm:space-y-8 flex flex-col items-center"
+                  >
+                    <Link to="/login" className="inline-block px-8 sm:px-16 py-5 sm:py-6 rounded-full bg-white text-turmeric-amber font-black uppercase tracking-[0.2em] shadow-2xl hover:scale-105 active:scale-95 transition-all text-sm sm:text-base">
+                      {pricingTab === 'subscription' ? 'Meet your sakhī — free for 30 days' : 'Get Lifetime Access Now'}
+                    </Link>
+                    
+                    <div className="space-y-2">
+                      <p className="text-xs sm:text-sm font-black uppercase tracking-[0.15em] text-white/60">
+                        {pricingTab === 'subscription' 
+                          ? 'Then ₹99/month or AED 14/month' 
+                          : 'One-time payment of ₹1,999'}
+                      </p>
+                      <p className="text-[10px] sm:text-xs font-medium text-white/40 uppercase tracking-widest">
+                        {pricingTab === 'subscription' 
+                          ? 'No ads. Ever. Cancel in two taps.' 
+                          : 'All future books and features included.'}
+                      </p>
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
               </div>
             </div>
 
@@ -603,6 +649,50 @@ const LandingPage = () => {
           <div className="absolute -bottom-48 -right-48 w-[600px] h-[600px] border-[0.5px] border-white rounded-full"></div>
         </div>
       </section>
+      {/* Demo Video Modal */}
+      <AnimatePresence>
+        {isDemoOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-8 backdrop-blur-md"
+            style={{
+              background: `radial-gradient(circle at center, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.9) 100%)`
+            }}
+            onClick={() => setIsDemoOpen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="relative max-w-4xl w-full aspect-video rounded-2xl overflow-hidden shadow-[0_0_80px_rgba(0,0,0,0.6)] bg-black"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => {
+                  setIsDemoOpen(false);
+                  navigate('/');
+                }}
+                className="absolute top-8 right-8 w-12 h-12 bg-red-600 hover:bg-red-700 border-2 border-white shadow-2xl rounded-full flex items-center justify-center text-white text-2xl font-bold transition-all z-50"
+              >
+                ×
+              </button>
+              
+              <video 
+                src="https://ik.imagekit.io/1e6dbfyxy/WhatsApp%20Video%202026-05-05%20at%207.19.41%20PM.mp4" 
+                alt="HealthSakhi Demo" 
+                className="w-full h-full object-contain"
+                autoPlay
+                controls
+                playsInline
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
